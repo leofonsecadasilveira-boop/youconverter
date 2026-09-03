@@ -19,14 +19,14 @@ export default function App() {
 
   const renderTool = () => {
     switch(activeTool) {
-      case 'merge': return <MergeTool />
-      case 'split': return <SplitTool />
-      case 'compress': return <CompressTool />
+      case 'merge': return <MergeTool isDark={isDark} />
+      case 'split': return <SplitTool isDark={isDark} />
+      case 'compress': return <CompressTool isDark={isDark} />
       default: return (
-        <div style={{textAlign:'center', padding:'40px', background:'#f9f7ff', borderRadius:'16px', border:'2px dashed #e9d5ff'}}>
+        <div style={{textAlign:'center', padding:'40px', background: isDark ? '#2a2a2a' : '#f9f7ff', borderRadius:'16px', border: isDark ? '2px dashed #444' : '2px dashed #e9d5ff', color: isDark ? 'white' : '#111'}}>
           <div style={{fontSize:'32px'}}>🚧</div>
           <h3 style={{marginTop:'10px', fontWeight:'700'}}>Em breve no Pro</h3>
-          <p style={{color:'#6b7280', fontSize:'13px'}}>Essa ferramenta será liberada na próxima atualização.</p>
+          <p style={{color: isDark ? '#9ca3af' : '#6b7280', fontSize:'13px'}}>Essa ferramenta será liberada na próxima atualização.</p>
         </div>
       )
     }
@@ -34,16 +34,16 @@ export default function App() {
 
   return (
     <div style={{minHeight:'100vh', background: isDark ? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark ? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column'}}>
-      <header style={{borderBottom:'1px solid #f3f4f6', background: isDark ? '#1a1a1a' : 'rgba(255,255,255,0.95)', backdropFilter:'blur(10px)', flexShrink:0, position:'sticky', top:0, zIndex:10}}>
+      <header style={{borderBottom: isDark ? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark ? '#1a1a1a' : 'rgba(255,255,255,0.95)', backdropFilter:'blur(10px)', flexShrink:0, position:'sticky', top:0, zIndex:10}}>
         <div style={{maxWidth:'1200px', margin:'0 auto', padding:'10px 24px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
             <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
-            <span style={{background:'#f3e8ff', color:'#7c3aed', fontSize:'10px', fontWeight:'700', padding:'3px 7px', borderRadius:'999px'}}>BETA</span>
+            <span style={{background: isDark ? '#3f3f46' : '#f3e8ff', color: isDark ? '#d8b4fe' : '#7c3aed', fontSize:'10px', fontWeight:'700', padding:'3px 7px', borderRadius:'999px'}}>BETA</span>
           </div>
           <nav style={{display:'flex', alignItems:'center', gap:'22px', fontSize:'14px', fontWeight:'500'}}>
             <span style={{cursor:'pointer'}}>Ferramentas</span>
             <span style={{cursor:'pointer'}}>Preços</span>
-            <span style={{cursor:'pointer', color:'#6b7280'}} className="hide-mobile">Entrar</span>
+            <span style={{cursor:'pointer', color: isDark ? '#a1a1aa' : '#6b7280'}} className="hide-mobile">Entrar</span>
             <button style={{background:'#7c3aed', color:'white', padding:'8px 16px', borderRadius:'10px', border:'none', fontWeight:'700', cursor:'pointer', fontSize:'13px'}}>Começar Grátis</button>
           </nav>
         </div>
@@ -54,7 +54,7 @@ export default function App() {
           <h1 style={{fontSize:'clamp(26px, 4vw, 36px)', fontWeight:'900', letterSpacing:'-1.2px', lineHeight:'1.05', maxWidth:'700px', margin:'0 auto'}}>
             Todas as ferramentas de PDF que você precisa.
           </h1>
-          <p style={{color:'#6b7280', fontSize:'14px', marginTop:'8px', maxWidth:'600px', margin:'8px auto 0'}}>
+          <p style={{color: isDark ? '#a1a1aa' : '#6b7280', fontSize:'14px', marginTop:'8px', maxWidth:'600px', margin:'8px auto 0'}}>
             Junte, divida, comprima e converta em segundos. Seguro e com servidores no Brasil.
           </p>
         </div>
@@ -65,30 +65,31 @@ export default function App() {
               key={t.id}
               onClick={() => t.active && setActiveTool(t.id)}
               style={{
-                border: activeTool===t.id ? '2px solid #7c3aed' : '1px solid #e5e7eb',
-                background: activeTool===t.id ? '#f9f7ff' : 'white',
+                border: activeTool===t.id ? '2px solid #7c3aed' : (isDark ? '1px solid #27272a' : '1px solid #e5e7eb'),
+                background: activeTool===t.id ? (isDark ? '#2a1f3d' : '#f9f7ff') : (isDark ? '#1f1f1f' : 'white'),
                 borderRadius:'12px',
                 padding:'12px',
                 cursor: t.active ? 'pointer' : 'not-allowed',
                 opacity: t.active ? 1 : 0.55,
                 transition:'all .15s',
-                textAlign:'left'
+                textAlign:'left',
+                color: isDark ? 'white' : '#111827'
               }}
             >
               <div style={{fontSize:'18px'}}>{t.icon}</div>
               <div style={{fontWeight:'700', marginTop:'6px', fontSize:'13px'}}>{t.name}</div>
-              <div style={{fontSize:'11px', color:'#6b7280', marginTop:'2px', lineHeight:'1.2'}}>{t.desc}</div>
+              <div style={{fontSize:'11px', color: isDark ? '#a1a1aa' : '#6b7280', marginTop:'2px', lineHeight:'1.2'}}>{t.desc}</div>
             </div>
           ))}
         </div>
 
         <div style={{maxWidth:'900px', width:'100%', margin:'16px auto 0', flexShrink:0}}>
-          <div style={{background:'white', border:'1px solid #e5e7eb', borderRadius:'16px', padding:'18px', boxShadow:'0 8px 24px rgba(0,0,0,0.04)'}}>
+          <div style={{background: isDark ? '#1f1f1f' : 'white', border: isDark ? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'18px', boxShadow:'0 8px 24px rgba(0,0,0,0.04)'}}>
             {renderTool()}
           </div>
-          <div style={{marginTop:'10px', background:'#f9fafb', border:'1px solid #f3f4f6', borderRadius:'10px', padding:'8px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'12px', flexWrap:'wrap', gap:'6px'}}>
+          <div style={{marginTop:'10px', background: isDark ? '#1a1a1a' : '#f9fafb', border: isDark ? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'10px', padding:'8px 14px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'12px', flexWrap:'wrap', gap:'6px', color: isDark ? '#a1a1aa' : '#111'}}>
             <span>🆓 <b>Grátis:</b> 2/dia • até 50MB</span>
-            <span style={{color:'#7c3aed', fontWeight:'700', cursor:'pointer'}}>Desbloqueie ilimitado por R$19,90/mês →</span>
+            <span style={{color:'#a78bfa', fontWeight:'700', cursor:'pointer'}}>Desbloqueie ilimitado por R$19,90/mês →</span>
           </div>
         </div>
         <div style={{flex:1, minHeight:'10px'}}></div>
