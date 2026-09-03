@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import MergeTool from './components/MergeTool'
 import SplitTool from './components/SplitTool'
 import CompressTool from './components/CompressTool'
@@ -100,6 +101,7 @@ export default function App() {
           nav { gap: 12px !important; font-size: 13px !important; }
         }
       `}</style>
+      <Analytics />
     </div>
   )
 }
