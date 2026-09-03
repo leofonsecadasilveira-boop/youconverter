@@ -12,7 +12,7 @@ dotenv.config();
 
 const app = express();
 
-// CORS liberado para seu dominio + localhost
+// CORS - libera localhost para dev e seu dominio para prod
 app.use(cors({
   origin: true,
   credentials: true
@@ -22,13 +22,25 @@ app.use(express.json());
 const TMP_DIR = path.join(process.cwd(), 'tmp');
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
 
-// Multer aceita qualquer nome de campo para evitar bug files vs pdfs
+// Multer CORRIGIDO - só storage, sem dest duplicado
 const storage = multer.diskStorage({
-  destination: TMP_DIR,
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+  destination: (req, file, cb) => cb(null, TMP_DIR),
+  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`)
 });
-const upload = multer({ dest: TMP_DIR, storage });
 
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.originalname.toLowerCase().endsWith('.pdf')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas PDFs são permitidos'));
+    }
+  }
+});
+
+// Auto-delete de arquivos antigos
 const DELETE_MINUTES = parseInt(process.env.DELETE_AFTER_MINUTES || '60');
 setInterval(() => {
   try {
@@ -49,17 +61,12 @@ setInterval(() => {
 app.get('/', (req, res) => res.send('YouConverter API - Online 🚀'));
 app.get('/health', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
 
-// MERGE - aceita 'files' ou 'pdfs'
-app.post('/api/merge', upload.array('files'), async (req, res) => {
+// MERGE - CORRIGIDO: aceita 'files', 'pdfs', 'file' - qualquer nome
+app.post('/api/merge', upload.any(), async (req, res) => {
+  let files = req.files || [];
   try {
-    // Fallback se vier como 'pdfs'
-    let files = req.files;
-    if (!files || files.length === 0) {
-      // tenta de novo com qualquer campo
-      files = req.files;
-    }
     if (!files || files.length < 2) {
-      return res.status(400).json({ error: 'Envie pelo menos 2 PDFs. Campo deve ser "files"' });
+      return res.status(400).json({ error: `Envie pelo menos 2 PDFs. Recebi ${files?.length || 0}` });
     }
 
     const mergedPdf = await PDFDocument.create();
@@ -80,21 +87,22 @@ app.post('/api/merge', upload.array('files'), async (req, res) => {
       if (!err) { try{ fs.unlinkSync(outPath) }catch{} }
     });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Erro ao juntar PDFs' });
+    console.error('MERGE ERROR:', e);
+    // limpa em caso de erro
+    try { files.forEach(f => fs.unlinkSync(f.path)) } catch {}
+    res.status(500).json({ error: 'Erro ao juntar PDFs: ' + e.message });
   }
 });
 
-// SPLIT - agora retorna ZIP para download
-app.post('/api/split', upload.single('file'), async (req, res) => {
+// SPLIT - CORRIGIDO: aceita qualquer campo
+app.post('/api/split', upload.any(), async (req, res) => {
+  let file = req.files && req.files[0];
   try {
-    const file = req.file || (req.files && req.files[0]);
-    if (!file) return res.status(400).json({ error: 'Envie 1 PDF no campo "file"' });
+    if (!file) return res.status(400).json({ error: 'Envie 1 PDF' });
 
     const bytes = fs.readFileSync(file.path);
     const pdf = await PDFDocument.load(bytes);
     
-    // Cria ZIP
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename=youconverter-split-${Date.now()}.zip`);
     
@@ -112,19 +120,21 @@ app.post('/api/split', upload.single('file'), async (req, res) => {
     await archive.finalize();
     try{ fs.unlinkSync(file.path) }catch{}
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ error: 'Erro ao dividir PDF' });
+    console.error('SPLIT ERROR:', e);
+    try { if (file) fs.unlinkSync(file.path) } catch {}
+    if (!res.headersSent) res.status(500).json({ error: 'Erro ao dividir PDF' });
   }
 });
 
-// COMPRESS - usando qpdf (já instalado no Dockerfile)
-app.post('/api/compress', upload.single('file'), async (req, res) => {
+// COMPRESS - CORRIGIDO: aceita qualquer campo
+app.post('/api/compress', upload.any(), async (req, res) => {
+  let file = req.files && req.files[0];
+  let output = null;
   try {
-    const file = req.file || (req.files && req.files[0]);
-    if (!file) return res.status(400).json({ error: 'Envie 1 PDF no campo "file"' });
+    if (!file) return res.status(400).json({ error: 'Envie 1 PDF' });
 
     const input = file.path;
-    const output = path.join(TMP_DIR, `compressed-${Date.now()}.pdf`);
+    output = path.join(TMP_DIR, `compressed-${Date.now()}.pdf`);
     
     execSync(`qpdf --compress-streams=y --recompress-flate --object-streams=generate "${input}" "${output}"`);
     try{ fs.unlinkSync(input) }catch{}
@@ -133,8 +143,10 @@ app.post('/api/compress', upload.single('file'), async (req, res) => {
       if (!err) { try{ fs.unlinkSync(output) }catch{} }
     });
   } catch (e) {
-    console.error('Erro compress:', e.message);
-    res.status(500).json({ error: 'Erro ao comprimir - tente outro arquivo' });
+    console.error('COMPRESS ERROR:', e.message);
+    try { if (file) fs.unlinkSync(file.path) } catch {}
+    try { if (output && fs.existsSync(output)) fs.unlinkSync(output) } catch {}
+    if (!res.headersSent) res.status(500).json({ error: 'Erro ao comprimir - tente outro arquivo' });
   }
 });
 

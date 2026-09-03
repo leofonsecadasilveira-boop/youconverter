@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import DropZone from './DropZone.jsx'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 export default function CompressTool() {
   const [file, setFile] = useState(null)
@@ -13,10 +13,12 @@ export default function CompressTool() {
     try {
       const fd = new FormData()
       fd.append('file', file)
+
       const res = await fetch(`${API_URL}/api/compress`, { method: 'POST', body: fd })
       if (!res.ok) {
-        const text = await res.text()
-        throw new Error(text || 'Erro ao comprimir')
+        let msg = 'Erro ao comprimir'
+        try { const err = await res.json(); msg = err.error || msg } catch { msg = await res.text() }
+        throw new Error(msg)
       }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
@@ -26,7 +28,7 @@ export default function CompressTool() {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      URL.revokeObjectURL(url)
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) {
       alert(e.message)
     } finally {
@@ -37,9 +39,8 @@ export default function CompressTool() {
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Comprimir PDF</h2>
-      <DropZone onFiles={files => setFile(files[0])} multiple={false} />
-      {file && <p style={{ marginTop: 12, fontSize: 13 }}>{file.name} ({(file.size/1024/1024).toFixed(2)} MB)</p>}
-      <button onClick={handleCompress} disabled={loading} style={{ marginTop: 20, background: '#7C3AED', color: '#fff', border: 0, padding: '12px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', width: '100%' }}>
+      <DropZone onFiles={(f) => setFile(f[0])} single />
+      <button onClick={handleCompress} disabled={loading || !file} style={{ marginTop: 20, background: '#7C3AED', color: '#fff', border: 0, padding: '12px 24px', borderRadius: 10, fontWeight: 700, cursor: 'pointer', width: '100%', opacity: loading || !file ? 0.6 : 1 }}>
         {loading ? 'Comprimindo...' : 'Comprimir agora ↓'}
       </button>
     </div>

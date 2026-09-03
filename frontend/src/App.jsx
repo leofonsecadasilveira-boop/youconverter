@@ -6,15 +6,16 @@ import Logo from './components/Logo'
 
 const TOOLS = [
   { id: 'merge', name: 'Juntar PDF', desc: 'Junte vários PDFs em um só', icon: '🔗', active: true },
-  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: '✂️', active: true },
+  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: '✂', active: true },
   { id: 'compress', name: 'Comprimir PDF', desc: 'Reduza o tamanho', icon: '📦', active: true },
-  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: '🖼️', active: false },
+  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: '🖼', active: false },
   { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', icon: '🎨', active: false },
   { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', icon: '🔒', active: false },
 ]
 
 export default function App() {
   const [activeTool, setActiveTool] = useState('merge')
+  const [isDark, setIsDark] = useState(false)
 
   const renderTool = () => {
     switch(activeTool) {
@@ -32,12 +33,11 @@ export default function App() {
   }
 
   return (
-    <div style={{minHeight:'100vh', background:'#ffffff', fontFamily:'Inter, system-ui, sans-serif', color:'#111827', display:'flex', flexDirection:'column'}}>
-      {/* HEADER CORRIGIDO - Ferramentas e Preços de volta */}
-      <header style={{borderBottom:'1px solid #f3f4f6', background:'rgba(255,255,255,0.95)', backdropFilter:'blur(10px)', flexShrink:0, position:'sticky', top:0, zIndex:10}}>
+    <div style={{minHeight:'100vh', background: isDark ? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark ? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column'}}>
+      <header style={{borderBottom:'1px solid #f3f4f6', background: isDark ? '#1a1a1a' : 'rgba(255,255,255,0.95)', backdropFilter:'blur(10px)', flexShrink:0, position:'sticky', top:0, zIndex:10}}>
         <div style={{maxWidth:'1200px', margin:'0 auto', padding:'10px 24px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
-            <Logo />
+            <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
             <span style={{background:'#f3e8ff', color:'#7c3aed', fontSize:'10px', fontWeight:'700', padding:'3px 7px', borderRadius:'999px'}}>BETA</span>
           </div>
           <nav style={{display:'flex', alignItems:'center', gap:'22px', fontSize:'14px', fontWeight:'500'}}>
