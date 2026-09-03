@@ -3,7 +3,7 @@ import DropZone from './DropZone.jsx'
 
 const API_URL = import.meta.env.VITE_API_URL || ''
 
-export default function MergeTool() {
+export default function MergeTool({ isDark }) {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
 
@@ -20,12 +20,14 @@ export default function MergeTool() {
       })
 
       if (!res.ok) {
+        // LÊ O BODY SÓ UMA VEZ
+        const rawText = await res.text()
         let msg = 'Erro ao juntar PDFs'
         try {
-          const err = await res.json()
-          msg = err.error || msg
+          const parsed = JSON.parse(rawText)
+          msg = parsed.error || msg
         } catch {
-          msg = await res.text()
+          if (rawText) msg = rawText
         }
         throw new Error(msg)
       }
@@ -38,7 +40,8 @@ export default function MergeTool() {
       document.body.appendChild(a)
       a.click()
       a.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      setTimeout(() => URL.revokeObjectURL(url), 2000)
+      setFiles([])
     } catch (e) {
       console.error(e)
       alert(e.message || 'Falha na conexão com a API')
@@ -49,10 +52,10 @@ export default function MergeTool() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Juntar PDFs</h2>
-      <DropZone onFiles={setFiles} />
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16, color: isDark? 'white' : '#111' }}>Juntar PDFs</h2>
+      <DropZone onFiles={setFiles} isDark={isDark} />
       {files.length > 0 && (
-        <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
+        <p style={{ marginTop: 12, fontSize: 13, color: isDark? '#a1a1aa' : '#6b7280' }}>
           {files.length} arquivos selecionados
         </p>
       )}
