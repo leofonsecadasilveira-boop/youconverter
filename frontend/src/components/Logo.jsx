@@ -1,10 +1,9 @@
 export default function Logo({ isDark, onToggle }) {
   return (
-    <div style={{display:'flex', alignItems:'center', gap:'4px'}}>
-      <span style={{fontWeight:900, fontSize:'22px', color: isDark ? 'white' : '#111'}}>You</span>
+    <div style={{display:'flex', alignItems:'center', gap:'8px'}}>
       <button 
         onClick={onToggle}
-        title="Modo noturno"
+        title="Clique para modo noturno"
         style={{
           background:'transparent',
           border:'none',
@@ -16,8 +15,8 @@ export default function Logo({ isDark, onToggle }) {
       >
         <img 
           src="/logo.png" 
-          alt="C"
-          style={{ height:'24px', width:'auto' }} 
+          alt="YouConverter"
+          style={{ height:'28px', width:'auto' }} 
         />
       </button>
     </div>
