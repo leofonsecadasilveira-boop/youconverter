@@ -3,8 +3,10 @@ import { PDFDocument } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 import DropZone from './DropZone.jsx'
 
-// FIX: Usa a mesma versão do worker que a lib instalada (resolve o erro API version mismatch)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`
+// FIX DEFINITIVO VITE/VERCEL: importa o worker local que vem dentro do node_modules
+// Isso elimina o erro "API version does not match Worker version" e o erro de fetch do unpkg
+import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
 export default function CompressTool() {
   const [file, setFile] = useState(null)
@@ -15,7 +17,7 @@ export default function CompressTool() {
 
   const MODES = {
     maxima: { 
-      label: 'Qualidade Máxima', 
+      label: 'Compressão Leve', 
       badge: 'Alta qualidade',
       scale: null, 
       quality: null, 
