@@ -3,13 +3,14 @@ import { PDFDocument } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 import DropZone from './DropZone.jsx'
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`
+// FIX: Usa a mesma versão do worker que a lib instalada (resolve o erro API version mismatch)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.js`
 
 export default function CompressTool() {
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState(null)
-  const [mode, setMode] = useState('equilibrado') // maxima | equilibrado | maxima_compressao
+  const [mode, setMode] = useState('equilibrado')
   const [progress, setProgress] = useState('')
 
   const MODES = {
@@ -99,7 +100,6 @@ export default function CompressTool() {
   return (
     <div>
       <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Comprimir PDF</h2>
-
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12}}>
         {Object.entries(MODES).map(([key, m]) => (
           <button key={key} onClick={()=>setMode(key)} style={{
@@ -111,28 +111,22 @@ export default function CompressTool() {
           </button>
         ))}
       </div>
-
       <div style={{background:'#1F1F23', borderRadius:8, padding:'8px 12px', fontSize:11, color:'#9CA3AF', marginBottom:16, textAlign:'center'}}>
         {MODES[mode].desc}
       </div>
-
       <DropZone onFiles={(f) => setFile(f[0])} single />
-
       {file && (
         <div style={{marginTop:16, background:'#F5F3FF', border:'1px solid #DDD6FE', padding:'12px 14px', borderRadius:10, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <span style={{fontWeight:600, color:'#5B21B6', fontSize:13, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'80%'}}>📄 {file.name} - {(file.size/1024/1024).toFixed(2)} MB</span>
           <button onClick={()=>{setFile(null); setStats(null)}} style={{background:'transparent', border:0, color:'#7C3AED', cursor:'pointer', fontWeight:700}}>X</button>
         </div>
       )}
-
       {progress && <div style={{marginTop:10, fontSize:12, color:'#7C3AED', fontWeight:600, textAlign:'center'}}>{progress}</div>}
-
       {stats && (
         <div style={{marginTop:12, background:'#ECFDF5', border:'1px solid #A7F3D0', padding:'12px', borderRadius:8, fontSize:13, color:'#065F46', fontWeight:700, textAlign:'center'}}>
           ✅ {stats.from} MB → {stats.to} MB {stats.pct > 0 ? `(-${stats.pct}%)` : '(já otimizado)'}
         </div>
       )}
-
       <button onClick={handleCompress} disabled={loading ||!file} style={{ marginTop: 16, background: '#7C3AED', color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading ||!file? 0.6 : 1 }}>
         {loading? progress || 'Comprimindo...' : `Comprimir - ${MODES[mode].label} ↓`}
       </button>
