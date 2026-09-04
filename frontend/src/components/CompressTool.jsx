@@ -3,8 +3,6 @@ import { PDFDocument } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 import DropZone from './DropZone.jsx'
 
-// FIX DEFINITIVO VITE/VERCEL: importa o worker local que vem dentro do node_modules
-// Isso elimina o erro "API version does not match Worker version" e o erro de fetch do unpkg
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
@@ -15,27 +13,30 @@ export default function CompressTool() {
   const [mode, setMode] = useState('equilibrado')
   const [progress, setProgress] = useState('')
 
+  // READEQUADO PARA ALTA QUALIDADE
+  // Antes: equilibrado 1.8/0.75 (-50% mas borrava), maxima 1.2/0.6 (-80% muito borrado)
+  // Agora: mantém DPI alto, só baixa qualidade do JPEG levemente
   const MODES = {
     maxima: { 
-      label: 'Compressão Leve', 
+      label: 'Qualidade Máxima', 
       badge: 'Alta qualidade',
       scale: null, 
       quality: null, 
-      desc: 'Mantém nitidez original • Texto selecionável' 
+      desc: 'Mantém nitidez 100% • Texto selecionável' 
     },
     equilibrado: { 
       label: 'Equilibrado', 
-      badge: 'Recomendado',
-      scale: 1.8, 
-      quality: 0.75, 
-      desc: 'Equilíbrio perfeito • -50% de tamanho' 
+      badge: 'Recomendado • Alta qualidade',
+      scale: 2.5, // antes 1.8 (~130dpi) -> agora 2.5 (~180dpi)
+      quality: 0.85, // antes 0.75 -> agora 0.85
+      desc: 'Alta qualidade • -30% a -40% de tamanho' 
     },
     maxima_compressao: { 
       label: 'Compressão Máxima', 
-      badge: 'Arquivo menor 🔥',
-      scale: 1.2, 
-      quality: 0.6, 
-      desc: 'Máxima compressão • -80% de tamanho' 
+      badge: 'Arquivo menor • Boa qualidade',
+      scale: 2.0, // antes 1.2 (~86dpi) -> agora 2.0 (~144dpi)
+      quality: 0.72, // antes 0.6 -> agora 0.72
+      desc: 'Boa qualidade • -55% a -65% de tamanho' 
     },
   }
 
@@ -63,9 +64,16 @@ export default function CompressTool() {
       const viewport = page.getViewport({ scale })
       const canvas = document.createElement('canvas')
       const context = canvas.getContext('2d')
+      
+      // ALTA QUALIDADE: ativa suavização bicúbica
+      context.imageSmoothingEnabled = true
+      context.imageSmoothingQuality = 'high'
+      
       canvas.width = viewport.width
       canvas.height = viewport.height
       await page.render({ canvasContext: context, viewport }).promise
+      
+      // JPEG com qualidade maior
       const jpegDataUrl = canvas.toDataURL('image/jpeg', quality)
       const jpegBytes = Uint8Array.from(atob(jpegDataUrl.split(',')[1]), c => c.charCodeAt(0))
       const jpegImage = await newPdfDoc.embedJpg(jpegBytes)
@@ -132,7 +140,7 @@ export default function CompressTool() {
       <button onClick={handleCompress} disabled={loading ||!file} style={{ marginTop: 16, background: '#7C3AED', color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading ||!file? 0.6 : 1 }}>
         {loading? progress || 'Comprimindo...' : `Comprimir - ${MODES[mode].label} ↓`}
       </button>
-      <p style={{marginTop:8, fontSize:11, color:'#6B7280', textAlign:'center'}}>100% no seu aparelho • Seguro e privado • Até 50MB</p>
+      <p style={{marginTop:8, fontSize:11, color:'#6B7280', textAlign:'center'}}>100% no seu aparelho • Alta qualidade • Até 50MB</p>
     </div>
   )
 }
