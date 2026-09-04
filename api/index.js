@@ -51,6 +51,38 @@ app.post(['/api/split','/split'], upload.any(), async (req,res)=>{
   }catch(e){ console.error(e); return res.status(500).json({error:e.message}) }
 });
 
+// COMPRIMIR - NOVO
+app.post(['/api/compress','/compress'], upload.any(), async (req,res)=>{
+  try{
+    if(!req.files||req.files.length===0) return res.status(400).json({error:'Envie 1 PDF'});
+    const file = req.files[0];
+    const originalSize = file.buffer.length;
+
+    const pdfDoc = await PDFDocument.load(file.buffer);
+
+    // Limpa metadados e info inútil (economiza espaço)
+    pdfDoc.setTitle('');
+    pdfDoc.setAuthor('');
+    pdfDoc.setSubject('');
+    pdfDoc.setKeywords([]);
+    pdfDoc.setProducer('youconverter.com.br');
+    pdfDoc.setCreator('youconverter.com.br');
+
+    // Salva com compressão máxima do pdf-lib
+    const compressedBytes = await pdfDoc.save({
+      useObjectStreams: true,
+      addDefaultPage: false,
+      objectsPerTick: 50
+    });
+
+    console.log(`Compress: ${originalSize} -> ${compressedBytes.length} bytes`);
+
+    res.setHeader('Content-Type','application/pdf');
+    res.setHeader('Content-Disposition',`attachment; filename="comprimido-${Date.now()}.pdf"`);
+    return res.send(Buffer.from(compressedBytes));
+  }catch(e){ console.error(e); return res.status(500).json({error:e.message}) }
+});
+
 app.all('*', (req,res)=> res.status(404).json({error:'Rota não encontrada', path:req.path}));
 
 export default app;
