@@ -2,15 +2,18 @@ import { useState, useEffect } from 'react'
 import MergeTool from './components/MergeTool'
 import SplitTool from './components/SplitTool'
 import CompressTool from './components/CompressTool'
+import JpgToPdfTool from './components/JpgToPdfTool'
+import PdfToJpgTool from './components/PdfToJpgTool'
+import ProtectPdfTool from './components/ProtectPdfTool'
 import Logo from './components/Logo'
 
 const TOOLS = [
   { id: 'merge', name: 'Juntar PDF', desc: 'Junte vários PDFs em um só', icon: '🔗', active: true },
-  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: '✂️', active: true },
+  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: '✂', active: true },
   { id: 'compress', name: 'Comprimir PDF', desc: 'Reduza o tamanho', icon: '📦', active: true },
-  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: '🖼️', active: false },
-  { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', icon: '🎨', active: false },
-  { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', icon: '🔒', active: false },
+  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: '🖼', active: true },
+  { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', icon: '🎨', active: true },
+  { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', icon: '🔒', active: true },
 ]
 
 export default function App() {
@@ -30,6 +33,9 @@ export default function App() {
       case 'merge': return <MergeTool isDark={isDark} />
       case 'split': return <SplitTool isDark={isDark} />
       case 'compress': return <CompressTool isDark={isDark} />
+      case 'jpg2pdf': return <JpgToPdfTool isDark={isDark} />
+      case 'pdf2jpg': return <PdfToJpgTool isDark={isDark} />
+      case 'protect': return <ProtectPdfTool isDark={isDark} />
       default: return (
         <div style={{textAlign:'center', padding:'40px', background: isDark? '#2a2a2a' : '#f9f7ff', borderRadius:'16px', border: isDark? '2px dashed #444' : '2px dashed #e9d5ff', color: isDark? 'white' : '#111'}}>
           <div style={{fontSize:'32px'}}>🚧</div>
