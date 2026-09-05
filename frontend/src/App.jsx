@@ -102,14 +102,14 @@ export default function App() {
         </div>
 
         {/* ÁREA COM INSTRUÇÕES LATERAIS DESTACADAS */}
-        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'280px 1.25fr 300px', gap:'24px', marginTop:'32px', alignItems:'stretch'}}>
+        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'300px 1fr 320px', gap:'28px', marginTop:'32px', alignItems:'stretch'}}>
           
           {/* ESQUERDA - DESTAQUE */}
           <div className="side-info" style={{display:'flex'}}>
             <div style={{
               background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #162030 100%)' : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
               border: isDark? '1px solid #3f3f46' : '1px solid #bfdbfe',
-              borderLeft: '4px solid #2563eb',
+              borderLeft: '4px solid #3b82f6',
               borderRadius:'16px', 
               padding:'24px 20px',
               width:'100%',
@@ -117,18 +117,18 @@ export default function App() {
               flexDirection:'column',
               justifyContent:'center'
             }}>
-              <div style={{width:'48px', height:'48px', borderRadius:'12px', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', marginBottom:'14px', boxShadow:'0 4px 12px rgba(37,99,235,0.3)'}}>🔒</div>
+              <div style={{width:'48px', height:'48px', borderRadius:'12px', background:'#3b82f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', marginBottom:'14px', boxShadow:'0 4px 12px rgba(59,130,246,0.25)'}}>🔒</div>
               <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>🇧🇷 Feito no Brasil</div>
               <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#4b5563', lineHeight:'1.6'}}>
                 Criado aqui, com <b style={{color: isDark? 'white' : '#111827'}}>privacidade em primeiro lugar</b>. Seus arquivos são apagados automaticamente após o uso. Suporte em português, pensado para a LGPD.
               </div>
-              <div style={{marginTop:'16px', fontSize:'11px', fontWeight:'800', letterSpacing:'0.8px', textTransform:'uppercase', color:'#2563eb'}}>• PRIVADO • SEGURO • BRASILEIRO</div>
+              <div style={{marginTop:'16px', fontSize:'11px', fontWeight:'800', letterSpacing:'0.8px', textTransform:'uppercase', color:'#3b82f6'}}>• PRIVADO • SEGURO • BRASILEIRO</div>
             </div>
           </div>
 
           {/* CENTRO - FERRAMENTA */}
           <div>
-            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'28px 26px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
+            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
               <div style={{flex:1}}>
                 {renderTool()}
               </div>
