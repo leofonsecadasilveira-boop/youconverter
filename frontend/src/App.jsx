@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react'
 import MergeTool from './components/MergeTool'
 import SplitTool from './components/SplitTool'
@@ -50,7 +51,7 @@ export default function App() {
   }
 
   return (
-    <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column', transition:'background.2s, color.2s'}}>
+    <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column', transition:'background .2s, color .2s'}}>
       <header style={{borderBottom: isDark? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', position:'sticky', top:0, zIndex:20}}>
         <div style={{maxWidth:'1400px', margin:'0 auto', padding:'12px 32px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
@@ -65,7 +66,7 @@ export default function App() {
 
       <div style={{flex:1, display:'flex', flexDirection:'column', maxWidth:'1400px', margin:'0 auto', width:'100%', padding:'0 32px'}}>
         <div style={{textAlign:'center', paddingTop:'32px', paddingBottom:'16px'}}>
-          <h1 style={{fontSize:'clamp(32px, 4vw, 46px)', fontWeight:'900', letterSpacing:'-1.4px', lineHeight:'1.05', maxWidth:'680px', margin:'0 auto', textWrap:'balance'}}>
+          <h1 style={{fontSize:'clamp(32px, 4vw, 46px)', fontWeight:'900', letterSpacing:'-1.4px', lineHeight:'1.05', maxWidth:'680px', margin:'0 auto'}}>
             Todas as ferramentas de PDF que você precisa.
           </h1>
           <p style={{color: isDark? '#a1a1aa' : '#6b7280', fontSize:'17px', marginTop:'12px', maxWidth:'650px', margin:'12px auto 0'}}>
@@ -85,7 +86,7 @@ export default function App() {
                 borderRadius:'16px',
                 padding:'20px 18px',
                 cursor: 'pointer',
-                transition:'all.18s ease',
+                transition:'all .18s ease',
                 textAlign:'left',
                 color: isDark? 'white' : '#111827',
                 minHeight:'108px',
@@ -101,11 +102,7 @@ export default function App() {
           ))}
         </div>
 
-        
-        {/* ÁREA COM INSTRUÇÕES LATERAIS - QUADROS INDEPENDENTES COM ALTURA FIXA */}
         <div className="action-area-wrapper" style={{display:'flex', gap:'28px', marginTop:'32px', alignItems:'flex-start'}}>
-          
-          {/* ESQUERDA - QUADRO FIXO INDEPENDENTE */}
           <div style={{width:'300px', minWidth:'300px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
             <div style={{
               background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #162030 100%)' : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
@@ -129,7 +126,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* CENTRO - FERRAMENTA - ALTURA VARIÁVEL */}
           <div style={{flex:1, minWidth:'400px'}}>
             <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', minHeight:'380px', display:'flex', flexDirection:'column'}}>
               <div style={{flex:1}}>
@@ -142,7 +138,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* DIREITA - QUADRO FIXO INDEPENDENTE */}
           <div style={{width:'320px', minWidth:'320px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
             <div style={{
               background: isDark? '#1e1e1e' : 'white',
@@ -177,21 +172,21 @@ export default function App() {
               </div>
             </div>
           </div>
-
         </div>
+      </div>
 
-        <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af'}}>
-        © 2026 YouConverter • Feito no Brasil 🇧🇷 • 100% client-side
+      <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af', marginTop:'48px'}}>
+        © 2026 YouConverter • Feito no Brasil 🇧🇷 • Privado e seguro
       </footer>
 
       <style>{`
-       .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
+        .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
         @media (max-width: 1200px) {
-         .action-area-wrapper { grid-template-columns: 1fr !important; }
-         .side-info { display: none !important; }
+          .action-area-wrapper { flex-direction: column !important; }
+          .action-area-wrapper > div { width: 100% !important; min-width: 100% !important; height: auto !important; position: static !important; }
         }
         @media (max-width: 768px) {
-         .hide-mobile { display: none!important; }
+          .hide-mobile { display: none!important; }
         }
       `}</style>
     </div>
