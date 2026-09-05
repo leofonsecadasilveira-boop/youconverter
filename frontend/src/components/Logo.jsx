@@ -1,6 +1,17 @@
-﻿export default function Logo({ isDark, onToggle }) {
+﻿import { useState, useEffect } from 'react'
+
+export default function Logo({ isDark, onToggle }) {
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   return (
-    <div style={{display:'flex', alignItems:'center', gap:'10px'}}>
+    <div style={{display:'flex', alignItems:'center', gap: isMobile ? '6px' : '10px'}}>
       <button 
         onClick={onToggle}
         title="Clique para modo noturno"
@@ -17,20 +28,19 @@
           src="/logo.png" 
           alt="YouConverter"
           style={{ 
-            height:'34px', 
+            height: isMobile ? '24px' : '34px', 
             width:'auto',
-            // ESSA LINHA FAZ A MÁGICA NO MODO NOTURNO
             filter: isDark ? 'brightness(0) invert(1)' : 'none',
-            transition:'filter 0.2s, height 0.2s'
+            transition:'all 0.2s'
           }} 
         />
       </button>
       <span style={{
-        fontSize:'10px',
+        fontSize: isMobile ? '8px' : '10px',
         fontWeight:700,
         background: isDark ? '#5B21B6' : '#ede9fe',
         color: isDark ? 'white' : '#5B21B6',
-        padding:'3px 8px',
+        padding: isMobile ? '2px 5px' : '3px 8px',
         borderRadius:'999px'
       }}>BETA</span>
     </div>
