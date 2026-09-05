@@ -52,7 +52,7 @@ export default function App() {
   return (
     <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column', transition:'background.2s, color.2s'}}>
       <header style={{borderBottom: isDark? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', position:'sticky', top:0, zIndex:20}}>
-        <div style={{maxWidth:'1200px', margin:'0 auto', padding:'12px 24px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        <div style={{maxWidth:'1400px', margin:'0 auto', padding:'12px 32px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
           <nav style={{display:'flex', alignItems:'center', gap:'24px', fontSize:'14px', fontWeight:'500'}}>
             <span style={{cursor:'pointer', opacity:0.8}}>Ferramentas</span>
@@ -63,17 +63,17 @@ export default function App() {
         </div>
       </header>
 
-      <div style={{flex:1, display:'flex', flexDirection:'column', maxWidth:'1200px', margin:'0 auto', width:'100%', padding:'0 24px'}}>
-        <div style={{textAlign:'center', paddingTop:'28px', paddingBottom:'12px'}}>
-          <h1 style={{fontSize:'clamp(28px, 4vw, 38px)', fontWeight:'900', letterSpacing:'-1.2px', lineHeight:'1.05', maxWidth:'700px', margin:'0 auto'}}>
+      <div style={{flex:1, display:'flex', flexDirection:'column', maxWidth:'1400px', margin:'0 auto', width:'100%', padding:'0 32px'}}>
+        <div style={{textAlign:'center', paddingTop:'32px', paddingBottom:'16px'}}>
+          <h1 style={{fontSize:'clamp(32px, 4vw, 46px)', fontWeight:'900', letterSpacing:'-1.4px', lineHeight:'1.05', maxWidth:'800px', margin:'0 auto'}}>
             Todas as ferramentas de PDF que você precisa.
           </h1>
-          <p style={{color: isDark? '#a1a1aa' : '#6b7280', fontSize:'15px', marginTop:'10px', maxWidth:'600px', margin:'10px auto 0'}}>
+          <p style={{color: isDark? '#a1a1aa' : '#6b7280', fontSize:'17px', marginTop:'12px', maxWidth:'650px', margin:'12px auto 0'}}>
             Junte, divida, comprima e converta em segundos. Seguro e com servidores no Brasil.
           </p>
         </div>
 
-        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(160px, 1fr))', gap:'12px', marginTop:'18px'}}>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(210px, 1fr))', gap:'18px', marginTop:'24px'}}>
           {TOOLS.map(t => (
             <div
               key={t.id}
@@ -82,22 +82,26 @@ export default function App() {
               style={{
                 border: activeTool===t.id? '2px solid #7c3aed' : (isDark? '1px solid #27272a' : '1px solid #e5e7eb'),
                 background: activeTool===t.id? (isDark? '#2a1f3d' : '#f9f7ff') : (isDark? '#1f1f1f' : 'white'),
-                borderRadius:'14px',
-                padding:'14px',
+                borderRadius:'16px',
+                padding:'20px 18px',
                 cursor: 'pointer',
                 transition:'all.18s ease',
                 textAlign:'left',
-                color: isDark? 'white' : '#111827'
+                color: isDark? 'white' : '#111827',
+                minHeight:'108px',
+                display:'flex',
+                flexDirection:'column',
+                justifyContent:'center'
               }}
             >
-              <div style={{fontSize:'20px'}}>{t.icon}</div>
-              <div style={{fontWeight:'700', marginTop:'8px', fontSize:'13px'}}>{t.name}</div>
-              <div style={{fontSize:'11px', color: isDark? '#a1a1aa' : '#6b7280', marginTop:'3px', lineHeight:'1.3'}}>{t.desc}</div>
+              <div style={{fontSize:'28px'}}>{t.icon}</div>
+              <div style={{fontWeight:'700', marginTop:'12px', fontSize:'15.5px', lineHeight:'1.3'}}>{t.name}</div>
+              <div style={{fontSize:'12.5px', color: isDark? '#a1a1aa' : '#6b7280', marginTop:'6px', lineHeight:'1.4'}}>{t.desc}</div>
             </div>
           ))}
         </div>
 
-        <div style={{maxWidth:'900px', width:'100%', margin:'20px auto 0'}}>
+        <div style={{maxWidth:'900px', width:'100%', margin:'28px auto 0'}}>
           <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'20px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.04)'}}>
             {renderTool()}
           </div>
@@ -117,6 +121,11 @@ export default function App() {
        .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
         @media (max-width: 768px) {
          .hide-mobile { display: none!important; }
+         div[style*="max-width: 1400px"] { padding-left: 24px !important; padding-right: 24px !important; }
+        }
+        /* Garante que no desktop os cards não fiquem pequenos */
+        @media (min-width: 1024px) {
+          div[style*="minmax(210px"] { gap: 18px !important; }
         }
       `}</style>
     </div>
