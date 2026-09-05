@@ -35,17 +35,17 @@ export default function CompressTool({ isDark }) {
   return (
     <div>
       <h2 style={{fontSize:22,fontWeight:800,marginBottom:12,color:titleColor}}>Comprimir PDF</h2>
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12}}>
+      {/* AGORA ACIMA DOS BOTÕES - igual aos outros tools */}
+      <div style={{background: isDark ? '#27272a' : '#f3f4f6', borderRadius:8, padding:'8px 12px', fontSize:11, color: isDark ? '#a1a1aa' : '#6b7280', marginBottom:12, textAlign:'center'}}>
+        {MODES[mode].desc}
+      </div>
+      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:16}}>
         {Object.entries(MODES).map(([k,m])=>(
           <button key={k} onClick={()=>setMode(k)} style={getBtn(mode===k)}>
             <div style={{fontWeight:800,fontSize:12,color: mode===k ? '#fff' : (isDark?'#f3f4f6':'#111827'), lineHeight:'1.2'}}>{m.label}</div>
             <div style={{fontSize:10,color: mode===k ? '#e9d5ff' : (isDark?'#a1a1aa':'#6b7280'), marginTop:4, fontWeight:600}}>{m.badge}</div>
           </button>
         ))}
-      </div>
-      {/* CORRIGIDO: estilo discreto cinza como você pediu - igual ao print image_e9de6f.png */}
-      <div style={{background: isDark ? '#27272a' : '#f3f4f6', borderRadius:8, padding:'8px 12px', fontSize:11, color: isDark ? '#a1a1aa' : '#6b7280', marginBottom:16, textAlign:'center'}}>
-        {MODES[mode].desc}
       </div>
       <DropZone onFiles={(f)=>setFile(f[0])} single isDark={isDark} accept=".pdf" />
       {file && <div style={{marginTop:12,fontSize:13,fontWeight:600,color:isDark?'#f3f4f6':'#111827', background:isDark?'#27272a':'#f3f4f6', padding:'10px 12px', borderRadius:8}}>📄 {file.name}</div>}
