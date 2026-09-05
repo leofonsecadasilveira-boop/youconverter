@@ -1,7 +1,5 @@
 import { useState } from 'react'
 
-// YouConverter Engine - 100% própria, sem AGPL, sem pagar licença
-// Usa qpdf-wasm (Apache 2.0) - pode usar comercialmente
 export default function ProtectPdfTool({ isDark }) {
   const [file, setFile] = useState(null)
   const [password, setPassword] = useState('')
@@ -14,17 +12,15 @@ export default function ProtectPdfTool({ isDark }) {
     if (password !== confirm) return alert('Senhas não conferem')
     setLoading(true)
     try {
-      // Carrega qpdf-wasm dinamicamente
-      const { QPDF } = await import('qpdf-wasm-esm-embedded')
-      const qpdf = await QPDF.create()
+      // Import correto: default export é função QPDF
+      const QPDFModule = await import('qpdf-wasm-esm-embedded')
+      const QPDF = QPDFModule.default || QPDFModule.QPDF || QPDFModule
+      const qpdf = await QPDF()
 
       const buffer = new Uint8Array(await file.arrayBuffer())
-      
-      // Escreve input no FS virtual do WASM
       qpdf.FS.writeFile('/input.pdf', buffer)
 
-      // Comando igual QPDF desktop: --encrypt user owner 256
-      // 256 = AES-256
+      // Comando qpdf CLI: encrypt
       qpdf.callMain([
         '/input.pdf',
         '--encrypt', password, password + '_owner', '256',
@@ -35,8 +31,6 @@ export default function ProtectPdfTool({ isDark }) {
       ])
 
       const outBuffer = qpdf.FS.readFile('/output.pdf')
-      
-      // Limpa FS
       qpdf.FS.unlink('/input.pdf')
       qpdf.FS.unlink('/output.pdf')
 
@@ -49,29 +43,29 @@ export default function ProtectPdfTool({ isDark }) {
       a.click()
       a.remove()
       setTimeout(()=>URL.revokeObjectURL(url), 1500)
-      
-      alert('✅ PDF protegido com AES-256 pela YouConverter Engine!\nSenha: ' + password)
+      alert('✅ PDF protegido! Senha: ' + password)
     } catch (e) {
       console.error(e)
-      alert('Erro: ' + e.message)
+      alert('Erro: ' + e.message + '\n' + e.stack)
     } finally {
       setLoading(false)
     }
   }
 
-  const cardBg = isDark ? '#1f1f1f' : '#ffffff'
-  const inputBg = isDark ? '#2a2a2a' : '#ffffff'
-  const textColor = isDark ? '#f3f4f6' : '#111827'
-  const borderColor = isDark ? '#3f3f46' : '#e5e7eb'
+  const PURPLE = '#7C3AED'
+  const cardBg = '#1e1e1e'
+  const inputBg = '#2a2a2a'
+  const textColor = '#f3f4f6'
+  const borderColor = '#3f3f46'
 
   return (
     <div style={{maxWidth:600, margin:'0 auto'}}>
       <h2 style={{fontSize:22, fontWeight:800, marginBottom:16, color: textColor}}>Proteger PDF com Senha 🔒</h2>
-      <div style={{background: isDark ? '#1f2a1f' : '#F0FDF4', border: isDark ? '1px solid #22c55e' : '1px solid #BBF7D0', borderRadius:8, padding:'10px 12px', fontSize:11, color: isDark ? '#86efac' : '#15803d', marginBottom:16, textAlign:'center'}}>
-        ✅ YouConverter Engine • Apache 2.0 • AES-256 • 100% sua • Sem licença paga
+      <div style={{background: 'rgba(124, 58, 237, 0.1)', border: `1px solid ${PURPLE}`, borderRadius:8, padding:'10px 12px', fontSize:11, color: '#c4b5fd', marginBottom:16, textAlign:'center'}}>
+        🔒 YouConverter Engine • AES-256 • 100% no seu navegador
       </div>
-      <div style={{border:`2px dashed #22c55e`, borderRadius:12, padding:24, textAlign:'center', background: cardBg}}>
-        <label style={{display:'inline-block', background:'#16a34a', color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14}}>
+      <div style={{border:`2px dashed ${PURPLE}`, borderRadius:12, padding:24, textAlign:'center', background: cardBg}}>
+        <label style={{display:'inline-block', background: PURPLE, color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14}}>
           Escolher Arquivo
           <input type="file" accept="application/pdf" onChange={e=>setFile(e.target.files?.[0]||null)} style={{display:'none'}} />
         </label>
@@ -84,7 +78,7 @@ export default function ProtectPdfTool({ isDark }) {
           style={{padding:'14px', borderRadius:10, border:`1px solid ${borderColor}`, width:'100%', background: inputBg, color: textColor, fontSize:14}} />
       </div>
       <button onClick={handleProtect} disabled={loading || !file} 
-        style={{marginTop:16, background:'#16a34a', color:'#fff', border:0, padding:'16px', borderRadius:12, fontWeight:800, cursor:'pointer', width:'100%', opacity: loading||!file?0.6:1, fontSize:15}}>
+        style={{marginTop:16, background: PURPLE, color:'#fff', border:0, padding:'16px', borderRadius:12, fontWeight:800, cursor:'pointer', width:'100%', opacity: loading||!file?0.6:1, fontSize:15}}>
         {loading ? 'Criptografando...' : 'Proteger com senha 🔒'}
       </button>
     </div>
