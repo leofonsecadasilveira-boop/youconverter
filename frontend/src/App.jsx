@@ -101,11 +101,12 @@ export default function App() {
           ))}
         </div>
 
-        {/* ÁREA COM INSTRUÇÕES LATERAIS DESTACADAS */}
-        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'300px 1fr 320px', gap:'28px', marginTop:'32px', alignItems:'stretch'}}>
+        
+        {/* ÁREA COM INSTRUÇÕES LATERAIS - QUADROS INDEPENDENTES COM ALTURA FIXA */}
+        <div className="action-area-wrapper" style={{display:'flex', gap:'28px', marginTop:'32px', alignItems:'flex-start'}}>
           
-          {/* ESQUERDA - DESTAQUE */}
-          <div className="side-info" style={{display:'flex'}}>
+          {/* ESQUERDA - QUADRO FIXO INDEPENDENTE */}
+          <div style={{width:'300px', minWidth:'300px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
             <div style={{
               background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #162030 100%)' : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
               border: isDark? '1px solid #3f3f46' : '1px solid #bfdbfe',
@@ -113,9 +114,11 @@ export default function App() {
               borderRadius:'16px', 
               padding:'24px 20px',
               width:'100%',
+              height:'100%',
               display:'flex',
               flexDirection:'column',
-              justifyContent:'center'
+              justifyContent:'center',
+              boxSizing:'border-box'
             }}>
               <div style={{width:'48px', height:'48px', borderRadius:'12px', background:'#3b82f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', marginBottom:'14px', boxShadow:'0 4px 12px rgba(59,130,246,0.25)'}}>🔒</div>
               <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>🇧🇷 Feito no Brasil</div>
@@ -126,46 +129,50 @@ export default function App() {
             </div>
           </div>
 
-          {/* CENTRO - FERRAMENTA */}
-          <div>
-            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
+          {/* CENTRO - FERRAMENTA - ALTURA VARIÁVEL */}
+          <div style={{flex:1, minWidth:'400px'}}>
+            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', minHeight:'380px', display:'flex', flexDirection:'column'}}>
               <div style={{flex:1}}>
                 {renderTool()}
               </div>
             </div>
             <div style={{marginTop:'12px', background: isDark? '#1a1a1a' : '#f9fafb', border: isDark? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'10px', padding:'10px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'12px', flexWrap:'wrap', gap:'6px', color: isDark? '#a1a1aa' : '#111'}}>
-              <span>🆓 <b>Grátis:</b> 9 ferramentas • 100% no seu PC</span>
+              <span>🆓 <b>Grátis:</b> 9 ferramentas • Privado e seguro</span>
               <span style={{color:'#a78bfa', fontWeight:'700', cursor:'pointer'}}>Desbloqueie ilimitado por R$19,90/mês →</span>
             </div>
           </div>
 
-          {/* DIREITA - PASSO A PASSO DESTACADO */}
-          <div className="side-info" style={{display:'flex'}}>
+          {/* DIREITA - QUADRO FIXO INDEPENDENTE */}
+          <div style={{width:'320px', minWidth:'320px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
             <div style={{
               background: isDark? '#1e1e1e' : 'white',
               border: isDark? '1px solid #3f3f46' : '1px solid #e5e7eb',
               borderLeft: '4px solid #f59e0b',
               borderRadius:'16px', 
               padding:'22px 20px',
-              width:'100%'
+              width:'100%',
+              height:'100%',
+              display:'flex',
+              flexDirection:'column',
+              justifyContent:'center',
+              boxSizing:'border-box'
             }}>
-              <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'18px'}}>
-                <div style={{fontSize:'24px'}}>⚡</div>
-                <div style={{fontSize:'16px', fontWeight:'900', color: isDark? 'white' : '#111827'}}>Como funciona?</div>
+              <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'16px'}}>
+                <div style={{width:'28px', height:'28px', borderRadius:'8px', background: isDark? '#78350f' : '#fef3c7', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>⚡</div>
+                <div style={{fontWeight:'800', fontSize:'15px', color: isDark? 'white' : '#111827'}}>Como funciona?</div>
               </div>
-              
-              <div style={{display:'flex', flexDirection:'column', gap:'18px'}}>
+              <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
                 <div style={{display:'flex', gap:'12px'}}>
-                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>1</div>
-                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Escolha</b> o que quer fazer ali em cima</div>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>1</div>
+                  <div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Escolha</b> o que quer fazer ali em cima</div>
                 </div>
                 <div style={{display:'flex', gap:'12px'}}>
-                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>2</div>
-                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Arraste</b> seu PDF pra cá ou clique em <b style={{color: isDark? 'white' : '#111827'}}>Escolher Arquivo</b></div>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>2</div>
+                  <div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Arraste</b> seu PDF pra cá ou clique em <b>Escolher Arquivo</b></div>
                 </div>
                 <div style={{display:'flex', gap:'12px'}}>
-                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#10b981', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>3</div>
-                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Clique</b> no botão roxo e seu arquivo novo <b style={{color:'#10b981'}}>já baixa sozinho</b></div>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#10b981', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>3</div>
+                  <div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Clique</b> no botão roxo e seu arquivo novo <b style={{color:'#10b981'}}>já baixa sozinho</b></div>
                 </div>
               </div>
             </div>
@@ -173,10 +180,7 @@ export default function App() {
 
         </div>
 
-        <div style={{flex:1, minHeight:'24px'}}></div>
-      </div>
-
-      <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af'}}>
+        <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af'}}>
         © 2026 YouConverter • Feito no Brasil 🇧🇷 • 100% client-side
       </footer>
 
