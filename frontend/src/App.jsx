@@ -10,7 +10,6 @@ import ExtractTool from './components/ExtractPagesTool'
 import UnlockTool from './components/UnlockPdfTool'
 import Logo from './components/Logo'
 
-// OPÇÃO B: Girar vira primeiro da linha de baixo, Extrair e Proteger trocam
 const TOOLS = [
   { id: 'merge', name: 'Juntar PDF', desc: 'Junte vários PDFs em um só', icon: '🔗' },
   { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: '✂' },
@@ -102,23 +101,37 @@ export default function App() {
           ))}
         </div>
 
-        {/* ÁREA COM INSTRUÇÕES LATERAIS - SÓ DESKTOP */}
-        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'220px 1fr 220px', gap:'24px', marginTop:'32px', alignItems:'start'}}>
+        {/* ÁREA COM INSTRUÇÕES LATERAIS DESTACADAS */}
+        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'300px 1fr 320px', gap:'28px', marginTop:'32px', alignItems:'stretch'}}>
           
-          {/* ESQUERDA */}
-          <div className="side-info" style={{paddingTop:'8px'}}>
-            <div style={{background: isDark? '#1a1a1a' : '#f9fafb', border: isDark? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'12px', padding:'16px'}}>
-              <div style={{fontSize:'13px', fontWeight:'800', marginBottom:'8px'}}>🔒 100% privado e seguro</div>
-              <div style={{fontSize:'12.5px', color: isDark? '#a1a1aa' : '#6b7280', lineHeight:'1.5'}}>
-                Seus arquivos nunca saem do seu computador. Tudo acontece no seu navegador.
+          {/* ESQUERDA - DESTAQUE */}
+          <div className="side-info" style={{display:'flex'}}>
+            <div style={{
+              background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #1a1625 100%)' : 'linear-gradient(135deg, #f9f7ff 0%, #f3f0ff 100%)',
+              border: isDark? '1px solid #3f3f46' : '1px solid #e9d5ff',
+              borderLeft: '4px solid #7c3aed',
+              borderRadius:'16px', 
+              padding:'24px 20px',
+              width:'100%',
+              display:'flex',
+              flexDirection:'column',
+              justifyContent:'center'
+            }}>
+              <div style={{fontSize:'32px', marginBottom:'12px'}}>🔒</div>
+              <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>100% privado e seguro</div>
+              <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#4b5563', lineHeight:'1.6'}}>
+                Seus arquivos <b style={{color: isDark? 'white' : '#111827'}}>nunca saem do seu computador</b>. Tudo acontece no seu navegador. Nenhum upload para nuvem.
               </div>
+              <div style={{marginTop:'16px', fontSize:'11px', fontWeight:'700', letterSpacing:'0.8px', textTransform:'uppercase', color:'#7c3aed'}}>• SEM NUVEM • SEM RASTRO</div>
             </div>
           </div>
 
           {/* CENTRO - FERRAMENTA */}
           <div>
-            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'20px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.04)'}}>
-              {renderTool()}
+            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
+              <div style={{flex:1}}>
+                {renderTool()}
+              </div>
             </div>
             <div style={{marginTop:'12px', background: isDark? '#1a1a1a' : '#f9fafb', border: isDark? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'10px', padding:'10px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'12px', flexWrap:'wrap', gap:'6px', color: isDark? '#a1a1aa' : '#111'}}>
               <span>🆓 <b>Grátis:</b> 9 ferramentas • 100% no seu PC</span>
@@ -126,14 +139,34 @@ export default function App() {
             </div>
           </div>
 
-          {/* DIREITA */}
-          <div className="side-info" style={{paddingTop:'8px'}}>
-            <div style={{background: isDark? '#1a1a1a' : '#f9fafb', border: isDark? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'12px', padding:'16px'}}>
-              <div style={{fontSize:'13px', fontWeight:'800', marginBottom:'10px'}}>⚡ Como funciona?</div>
-              <div style={{display:'flex', flexDirection:'column', gap:'8px', fontSize:'12.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4'}}>
-                <div><b>1. Escolha</b> o que quer fazer ali em cima</div>
-                <div><b>2. Arraste</b> seu PDF pra cá ou clique em <b>Escolher Arquivo</b></div>
-                <div><b>3. Clique</b> no botão roxo e seu arquivo novo já baixa sozinho</div>
+          {/* DIREITA - PASSO A PASSO DESTACADO */}
+          <div className="side-info" style={{display:'flex'}}>
+            <div style={{
+              background: isDark? '#1e1e1e' : 'white',
+              border: isDark? '1px solid #3f3f46' : '1px solid #e5e7eb',
+              borderLeft: '4px solid #f59e0b',
+              borderRadius:'16px', 
+              padding:'22px 20px',
+              width:'100%'
+            }}>
+              <div style={{display:'flex', alignItems:'center', gap:'10px', marginBottom:'18px'}}>
+                <div style={{fontSize:'24px'}}>⚡</div>
+                <div style={{fontSize:'16px', fontWeight:'900', color: isDark? 'white' : '#111827'}}>Como funciona?</div>
+              </div>
+              
+              <div style={{display:'flex', flexDirection:'column', gap:'18px'}}>
+                <div style={{display:'flex', gap:'12px'}}>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>1</div>
+                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Escolha</b> o que quer fazer ali em cima</div>
+                </div>
+                <div style={{display:'flex', gap:'12px'}}>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>2</div>
+                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Arraste</b> seu PDF pra cá ou clique em <b style={{color: isDark? 'white' : '#111827'}}>Escolher Arquivo</b></div>
+                </div>
+                <div style={{display:'flex', gap:'12px'}}>
+                  <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#10b981', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>3</div>
+                  <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#374151', lineHeight:'1.4', paddingTop:'2px'}}><b style={{color: isDark? 'white' : '#111827'}}>Clique</b> no botão roxo e seu arquivo novo <b style={{color:'#10b981'}}>já baixa sozinho</b></div>
+                </div>
               </div>
             </div>
           </div>
@@ -149,7 +182,7 @@ export default function App() {
 
       <style>{`
        .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
-        @media (max-width: 1024px) {
+        @media (max-width: 1200px) {
          .action-area-wrapper { grid-template-columns: 1fr !important; }
          .side-info { display: none !important; }
         }
