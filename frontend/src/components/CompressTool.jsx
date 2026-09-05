@@ -6,12 +6,14 @@ import DropZone from './DropZone.jsx'
 import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
 
-export default function CompressTool() {
+export default function CompressTool({ isDark }) {
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [stats, setStats] = useState(null)
   const [mode, setMode] = useState('leve')
   const [progress, setProgress] = useState('')
+
+  const PURPLE = '#7C3AED'
 
   const MODES = {
     leve: { 
@@ -36,6 +38,19 @@ export default function CompressTool() {
       desc: 'Boa qualidade • -55% a -65% de tamanho' 
     },
   }
+
+  // TEMA
+  const titleColor = isDark ? '#f3f4f6' : '#111827'
+  const cardBgSelected = isDark ? '#2a1f4d' : '#F5F3FF'
+  const cardBgUnselected = isDark ? '#1A1A1A' : '#ffffff'
+  const borderSelected = `2px solid ${PURPLE}`
+  const borderUnselected = isDark ? '1px solid #2A2A2A' : '1px solid #e5e7eb'
+  const labelSelected = isDark ? '#c4b5fd' : '#5B21B6'
+  const labelUnselected = isDark ? '#E5E7EB' : '#111827'
+  const badgeSelected = PURPLE
+  const badgeUnselected = isDark ? '#9CA3AF' : '#6b7280'
+  const descBg = isDark ? '#1F1F23' : '#f9fafb'
+  const descColor = isDark ? '#9CA3AF' : '#6b7280'
 
   async function compressLeve() {
     const originalSize = file.size
@@ -101,38 +116,43 @@ export default function CompressTool() {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Comprimir PDF</h2>
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16, color: titleColor }}>Comprimir PDF</h2>
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12}}>
-        {Object.entries(MODES).map(([key, m]) => (
-          <button key={key} onClick={()=>setMode(key)} style={{
-            padding:'12px 8px', borderRadius:10, border: mode===key?'2px solid #7C3AED':'1px solid #2A2A2A',
-            background: mode===key?'#F5F3FF':'#1A1A1A', cursor:'pointer', textAlign:'center'
-          }}>
-            <div style={{fontWeight:800, fontSize:12, color: mode===key?'#5B21B6':'#E5E7EB', lineHeight:'1.2'}}>{m.label}</div>
-            <div style={{fontSize:10, color: mode===key?'#7C3AED':'#9CA3AF', marginTop:4, fontWeight:600}}>{m.badge}</div>
-          </button>
-        ))}
+        {Object.entries(MODES).map(([key, m]) => {
+          const selected = mode===key
+          return (
+            <button key={key} onClick={()=>setMode(key)} style={{
+              padding:'12px 8px', borderRadius:10, 
+              border: selected ? borderSelected : borderUnselected,
+              background: selected ? cardBgSelected : cardBgUnselected, 
+              cursor:'pointer', textAlign:'center', transition:'0.2s'
+            }}>
+              <div style={{fontWeight:800, fontSize:12, color: selected ? labelSelected : labelUnselected, lineHeight:'1.2'}}>{m.label}</div>
+              <div style={{fontSize:10, color: selected ? badgeSelected : badgeUnselected, marginTop:4, fontWeight:600}}>{m.badge}</div>
+            </button>
+          )
+        })}
       </div>
-      <div style={{background:'#1F1F23', borderRadius:8, padding:'8px 12px', fontSize:11, color:'#9CA3AF', marginBottom:16, textAlign:'center'}}>
+      <div style={{background: descBg, borderRadius:8, padding:'8px 12px', fontSize:11, color: descColor, marginBottom:16, textAlign:'center', border: isDark ? '1px solid #2a2a2a' : '1px solid #f3f4f6'}}>
         {MODES[mode].desc}
       </div>
-      <DropZone onFiles={(f) => setFile(f[0])} single />
+      <DropZone onFiles={(f) => setFile(f[0])} single isDark={isDark} />
       {file && (
-        <div style={{marginTop:16, background:'#F5F3FF', border:'1px solid #DDD6FE', padding:'12px 14px', borderRadius:10, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
-          <span style={{fontWeight:600, color:'#5B21B6', fontSize:13, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'80%'}}>📄 {file.name} - {(file.size/1024/1024).toFixed(2)} MB</span>
-          <button onClick={()=>{setFile(null); setStats(null)}} style={{background:'transparent', border:0, color:'#7C3AED', cursor:'pointer', fontWeight:700}}>X</button>
+        <div style={{marginTop:16, background: isDark ? '#2a1f4d' : '#F5F3FF', border: `1px solid ${isDark ? '#4c1d95' : '#DDD6FE'}`, padding:'12px 14px', borderRadius:10, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <span style={{fontWeight:600, color: isDark ? '#c4b5fd' : '#5B21B6', fontSize:13, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'80%'}}>📄 {file.name} - {(file.size/1024/1024).toFixed(2)} MB</span>
+          <button onClick={()=>{setFile(null); setStats(null)}} style={{background:'transparent', border:0, color:PURPLE, cursor:'pointer', fontWeight:700}}>X</button>
         </div>
       )}
-      {progress && <div style={{marginTop:10, fontSize:12, color:'#7C3AED', fontWeight:600, textAlign:'center'}}>{progress}</div>}
+      {progress && <div style={{marginTop:10, fontSize:12, color:PURPLE, fontWeight:600, textAlign:'center'}}>{progress}</div>}
       {stats && (
-        <div style={{marginTop:12, background:'#ECFDF5', border:'1px solid #A7F3D0', padding:'12px', borderRadius:8, fontSize:13, color:'#065F46', fontWeight:700, textAlign:'center'}}>
+        <div style={{marginTop:12, background: isDark ? '#052e16' : '#ECFDF5', border:'1px solid #A7F3D0', padding:'12px', borderRadius:8, fontSize:13, color: isDark ? '#6ee7b7' : '#065F46', fontWeight:700, textAlign:'center'}}>
           ✅ {stats.from} MB → {stats.to} MB {stats.pct > 0 ? `(-${stats.pct}%)` : '(já otimizado)'}
         </div>
       )}
-      <button onClick={handleCompress} disabled={loading ||!file} style={{ marginTop: 16, background: '#7C3AED', color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading ||!file? 0.6 : 1 }}>
+      <button onClick={handleCompress} disabled={loading ||!file} style={{ marginTop: 16, background: PURPLE, color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading ||!file? 0.6 : 1 }}>
         {loading? progress || 'Comprimindo...' : `Comprimir - ${MODES[mode].label} ↓`}
       </button>
-      <p style={{marginTop:8, fontSize:11, color:'#6B7280', textAlign:'center'}}>100% no seu aparelho • Seguro e privado • Até 50MB</p>
+      <p style={{marginTop:8, fontSize:11, color: isDark ? '#9ca3af' : '#6B7280', textAlign:'center'}}>100% no seu aparelho • Seguro e privado • Até 50MB</p>
     </div>
   )
 }
