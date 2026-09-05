@@ -102,7 +102,7 @@ export default function App() {
         </div>
 
         {/* ÁREA COM INSTRUÇÕES LATERAIS DESTACADAS */}
-        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'300px 1fr 320px', gap:'28px', marginTop:'32px', alignItems:'stretch'}}>
+        <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'280px 1.25fr 300px', gap:'24px', marginTop:'32px', alignItems:'stretch'}}>
           
           {/* ESQUERDA - DESTAQUE */}
           <div className="side-info" style={{display:'flex'}}>
@@ -128,7 +128,7 @@ export default function App() {
 
           {/* CENTRO - FERRAMENTA */}
           <div>
-            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
+            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'28px 26px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
               <div style={{flex:1}}>
                 {renderTool()}
               </div>
