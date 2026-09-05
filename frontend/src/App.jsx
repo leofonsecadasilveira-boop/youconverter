@@ -69,7 +69,7 @@ export default function App() {
             Todas as ferramentas de PDF que você precisa.
           </h1>
           <p style={{color: isDark? '#a1a1aa' : '#6b7280', fontSize:'17px', marginTop:'12px', maxWidth:'650px', margin:'12px auto 0'}}>
-            Junte, divida, comprima e converta em segundos. Seguro e com servidores no Brasil.
+            Junte, divida, comprima e converta em segundos. Feito no Brasil, rápido, seguro e privado.
           </p>
         </div>
 
@@ -101,14 +101,16 @@ export default function App() {
           ))}
         </div>
 
+        {/* ÁREA COM INSTRUÇÕES LATERAIS DESTACADAS */}
         <div className="action-area-wrapper" style={{display:'grid', gridTemplateColumns:'300px 1fr 320px', gap:'28px', marginTop:'32px', alignItems:'stretch'}}>
-
+          
+          {/* ESQUERDA - DESTAQUE */}
           <div className="side-info" style={{display:'flex'}}>
             <div style={{
               background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #162030 100%)' : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)',
               border: isDark? '1px solid #3f3f46' : '1px solid #bfdbfe',
               borderLeft: '4px solid #2563eb',
-              borderRadius:'16px',
+              borderRadius:'16px', 
               padding:'24px 20px',
               width:'100%',
               display:'flex',
@@ -116,14 +118,15 @@ export default function App() {
               justifyContent:'center'
             }}>
               <div style={{width:'48px', height:'48px', borderRadius:'12px', background:'#2563eb', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', marginBottom:'14px', boxShadow:'0 4px 12px rgba(37,99,235,0.3)'}}>🔒</div>
-              <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>100% privado e seguro</div>
+              <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>🇧🇷 Feito no Brasil</div>
               <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#4b5563', lineHeight:'1.6'}}>
-                Seus arquivos <b style={{color: isDark? 'white' : '#111827'}}>nunca saem do seu computador</b>. Tudo acontece no seu navegador. Nenhum upload para nuvem.
+                Criado aqui, com <b style={{color: isDark? 'white' : '#111827'}}>privacidade em primeiro lugar</b>. Seus arquivos são apagados automaticamente após o uso. Suporte em português, pensado para a LGPD.
               </div>
-              <div style={{marginTop:'16px', fontSize:'11px', fontWeight:'800', letterSpacing:'0.8px', textTransform:'uppercase', color:'#2563eb'}}>• SEM NUVEM • SEM RASTRO • 100% LOCAL</div>
+              <div style={{marginTop:'16px', fontSize:'11px', fontWeight:'800', letterSpacing:'0.8px', textTransform:'uppercase', color:'#2563eb'}}>• PRIVADO • SEGURO • BRASILEIRO</div>
             </div>
           </div>
 
+          {/* CENTRO - FERRAMENTA */}
           <div>
             <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding:'22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', height:'100%', display:'flex', flexDirection:'column'}}>
               <div style={{flex:1}}>
@@ -136,12 +139,13 @@ export default function App() {
             </div>
           </div>
 
+          {/* DIREITA - PASSO A PASSO DESTACADO */}
           <div className="side-info" style={{display:'flex'}}>
             <div style={{
               background: isDark? '#1e1e1e' : 'white',
               border: isDark? '1px solid #3f3f46' : '1px solid #e5e7eb',
               borderLeft: '4px solid #f59e0b',
-              borderRadius:'16px',
+              borderRadius:'16px', 
               padding:'22px 20px',
               width:'100%'
             }}>
@@ -149,7 +153,7 @@ export default function App() {
                 <div style={{fontSize:'24px'}}>⚡</div>
                 <div style={{fontSize:'16px', fontWeight:'900', color: isDark? 'white' : '#111827'}}>Como funciona?</div>
               </div>
-
+              
               <div style={{display:'flex', flexDirection:'column', gap:'18px'}}>
                 <div style={{display:'flex', gap:'12px'}}>
                   <div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#7c3aed', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'15px'}}>1</div>
@@ -177,13 +181,13 @@ export default function App() {
       </footer>
 
       <style>{`
-      .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
+       .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(124,58,237,0.12); }
         @media (max-width: 1200px) {
-        .action-area-wrapper { grid-template-columns: 1fr!important; }
-        .side-info { display: none!important; }
+         .action-area-wrapper { grid-template-columns: 1fr !important; }
+         .side-info { display: none !important; }
         }
         @media (max-width: 768px) {
-        .hide-mobile { display: none!important; }
+         .hide-mobile { display: none!important; }
         }
       `}</style>
     </div>
