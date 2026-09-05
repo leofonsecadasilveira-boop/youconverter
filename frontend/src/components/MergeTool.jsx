@@ -1,15 +1,12 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import DropZone from './DropZone.jsx'
 
 export default function MergeTool({ isDark }) {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
-  const PURPLE = '#7C3AED'
+  const PURPLE = '#5B21B6'
   const titleColor = isDark ? '#f3f4f6' : '#111827'
-  const descBg = isDark ? 'rgba(124, 58, 237, 0.12)' : 'rgba(124, 58, 237, 0.08)'
-  const descBorder = `1px solid ${PURPLE}`
-  const descColor = isDark ? '#c4b5fd' : PURPLE
 
   async function handleMerge() {
     if (files.length < 2) return alert('Selecione pelo menos 2 PDFs')
@@ -34,9 +31,10 @@ export default function MergeTool({ isDark }) {
 
   return (
     <div>
-      <h2 style={{fontSize:22,fontWeight:800,marginBottom:16,color:titleColor}}>Juntar PDF 📑</h2>
-      <div style={{background:descBg, border:descBorder, borderRadius:8, padding:'10px 12px', fontSize:11, color:descColor, marginBottom:16, textAlign:'center', fontWeight:600}}>
-        🔒 Feito no Brasil • Privado e seguro • Seguro e privado
+      <h2 style={{fontSize:22,fontWeight:800,marginBottom:12,color:titleColor}}>Juntar PDF 📑</h2>
+      {/* CORRIGIDO: estilo discreto igual ao seu print image_e9de6f.png + texto específico da função */}
+      <div style={{background: isDark ? '#27272a' : '#f3f4f6', borderRadius:8, padding:'8px 12px', fontSize:11, color: isDark ? '#a1a1aa' : '#6b7280', marginBottom:16, textAlign:'center'}}>
+        Junte 2 ou mais PDFs em 1 só • Arraste para reordenar • 100% no navegador
       </div>
       <div style={{border:`2px dashed ${PURPLE}`, borderRadius:12, padding:24, textAlign:'center', background: isDark ? '#1a1a1a' : '#fafafa'}}>
         <label style={{display:'inline-block', background:PURPLE, color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14}}>Escolher Arquivos
@@ -46,13 +44,13 @@ export default function MergeTool({ isDark }) {
       </div>
       <DropZone onFiles={(f)=>setFiles(prev=>[...prev,...f])} multiple isDark={isDark} single={false} hideUI />
       {files.length>0 && <div style={{marginTop:12, display:'flex', flexDirection:'column', gap:8}}>
-        {files.map((f,i)=><div key={i} style={{background:isDark?'#2a1f4d':'#F5F3FF', border:`1px solid #7C3AED`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        {files.map((f,i)=><div key={i} style={{background:isDark?'#2a1f4d':'#F5F3FF', border:`1px solid #5B21B6`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <span style={{fontSize:12,fontWeight:600,color:isDark?'#c4b5fd':'#5B21B6', maxWidth:'85%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{i+1}. 📄 {f.name}</span>
           <button onClick={()=>setFiles(files.filter((_,idx)=>idx!==i))} style={{background:'transparent',border:0,color:PURPLE,fontWeight:700,cursor:'pointer'}}>X</button>
         </div>)}
         <button onClick={()=>setFiles([])} style={{fontSize:11, background:'transparent', border:0, color:isDark?'#9ca3af':'#6b7280', cursor:'pointer', textAlign:'center'}}>Limpar tudo</button>
       </div>}
-      <button onClick={handleMerge} disabled={loading||files.length<2} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:10,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||files.length<2?0.6:1}}>
+      <button onClick={handleMerge} disabled={loading||files.length<2} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'16px 26px',borderRadius:12,fontWeight:900,fontSize:16,cursor:'pointer',width:'100%',opacity:loading||files.length<2?0.35:1, boxShadow: loading||files.length<2?'none':'0 6px 20px rgba(91,33,182,0.5)'}}>
         {loading?'Juntando...':`Juntar ${files.length?`(${files.length} PDFs)`:''} ↓`}
       </button>
     </div>
