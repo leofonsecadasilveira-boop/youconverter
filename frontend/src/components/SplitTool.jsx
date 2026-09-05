@@ -6,7 +6,7 @@ export default function SplitTool({ isDark }) {
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [range, setRange] = useState('')
-  const PURPLE = '#7C3AED'
+  const PURPLE = '#5B21B6'
   const titleColor = isDark ? '#f3f4f6' : '#111827'
   const descBg = isDark ? 'rgba(124, 58, 237, 0.12)' : 'rgba(124, 58, 237, 0.08)'
   const descColor = isDark ? '#c4b5fd' : PURPLE
@@ -54,7 +54,7 @@ export default function SplitTool({ isDark }) {
       </div>
       <DropZone onFiles={(f)=>setFile(f[0])} single isDark={isDark} hideUI />
       <input type="text" placeholder="Ex: 1,3,5-10 (vazio = todas as páginas separadas em 1 arquivo)" value={range} onChange={e=>setRange(e.target.value)} style={{marginTop:12, padding:'14px', borderRadius:10, border:`1px solid ${isDark?'#3f3f46':'#e5e7eb'}`, width:'100%', background:isDark?'#27272a':'#f9fafb', color:isDark?'#f3f4f6':'#111827', fontSize:13, outline:'none'}} />
-      <button onClick={handleSplit} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:10,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||!file?0.6:1}}>
+      <button onClick={handleSplit} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'16px 26px',borderRadius:10,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||!file?0.6:1}}>
         {loading?'Dividindo...':'Dividir PDF ↓'}
       </button>
     </div>
