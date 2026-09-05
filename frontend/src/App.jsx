@@ -5,6 +5,9 @@ import CompressTool from './components/CompressTool'
 import JpgToPdfTool from './components/JpgToPdfTool'
 import PdfToJpgTool from './components/PdfToJpgTool'
 import ProtectPdfTool from './components/ProtectPdfTool'
+import RotateTool from './components/RotatePdfTool'
+import ExtractTool from './components/ExtractPagesTool'
+import UnlockTool from './components/UnlockPdfTool'
 import Logo from './components/Logo'
 
 const TOOLS = [
@@ -14,6 +17,9 @@ const TOOLS = [
   { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: '🖼', active: true },
   { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', icon: '🎨', active: true },
   { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', icon: '🔒', active: true },
+  { id: 'rotate', name: 'Girar PDF', desc: 'Gire as páginas', icon: '🔄', active: true },
+  { id: 'extract', name: 'Extrair Páginas', desc: 'Extraia só algumas', icon: '📄', active: true },
+  { id: 'unlock', name: 'Desbloquear PDF', desc: 'Remova a senha', icon: '🔓', active: true },
 ]
 
 export default function App() {
@@ -36,19 +42,15 @@ export default function App() {
       case 'jpg2pdf': return <JpgToPdfTool isDark={isDark} />
       case 'pdf2jpg': return <PdfToJpgTool isDark={isDark} />
       case 'protect': return <ProtectPdfTool isDark={isDark} />
-      default: return (
-        <div style={{textAlign:'center', padding:'40px', background: isDark? '#2a2a2a' : '#f9f7ff', borderRadius:'16px', border: isDark? '2px dashed #444' : '2px dashed #e9d5ff', color: isDark? 'white' : '#111'}}>
-          <div style={{fontSize:'32px'}}>🚧</div>
-          <h3 style={{marginTop:'10px', fontWeight:'700'}}>Em breve no Pro</h3>
-          <p style={{color: isDark? '#9ca3af' : '#6b7280', fontSize:'13px', marginTop:'4px'}}>Essa ferramenta será liberada na próxima atualização.</p>
-        </div>
-      )
+      case 'rotate': return <RotateTool isDark={isDark} />
+      case 'extract': return <ExtractTool isDark={isDark} />
+      case 'unlock': return <UnlockTool isDark={isDark} />
+      default: return null
     }
   }
 
   return (
     <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column', transition:'background.2s, color.2s'}}>
-
       <header style={{borderBottom: isDark? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', position:'sticky', top:0, zIndex:20}}>
         <div style={{maxWidth:'1200px', margin:'0 auto', padding:'12px 24px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
@@ -75,15 +77,14 @@ export default function App() {
           {TOOLS.map(t => (
             <div
               key={t.id}
-              onClick={() => t.active && setActiveTool(t.id)}
+              onClick={() => setActiveTool(t.id)}
               className="tool-card"
               style={{
                 border: activeTool===t.id? '2px solid #7c3aed' : (isDark? '1px solid #27272a' : '1px solid #e5e7eb'),
                 background: activeTool===t.id? (isDark? '#2a1f3d' : '#f9f7ff') : (isDark? '#1f1f1f' : 'white'),
                 borderRadius:'14px',
                 padding:'14px',
-                cursor: t.active? 'pointer' : 'not-allowed',
-                opacity: t.active? 1 : 0.5,
+                cursor: 'pointer',
                 transition:'all.18s ease',
                 textAlign:'left',
                 color: isDark? 'white' : '#111827'
@@ -101,7 +102,7 @@ export default function App() {
             {renderTool()}
           </div>
           <div style={{marginTop:'12px', background: isDark? '#1a1a1a' : '#f9fafb', border: isDark? '1px solid #27272a' : '1px solid #f3f4f6', borderRadius:'10px', padding:'10px 16px', display:'flex', justifyContent:'space-between', alignItems:'center', fontSize:'12px', flexWrap:'wrap', gap:'6px', color: isDark? '#a1a1aa' : '#111'}}>
-            <span>🆓 <b>Grátis:</b> 2/dia • até 50MB</span>
+            <span>🆓 <b>Grátis:</b> 9 ferramentas • 100% no seu PC</span>
             <span style={{color:'#a78bfa', fontWeight:'700', cursor:'pointer'}}>Desbloqueie ilimitado por R$19,90/mês →</span>
           </div>
         </div>
@@ -109,7 +110,7 @@ export default function App() {
       </div>
 
       <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af'}}>
-        © 2026 YouConverter • Feito no Brasil 🇧🇷 • Arquivos deletados após 1h
+        © 2026 YouConverter • Feito no Brasil 🇧🇷 • 100% client-side
       </footer>
 
       <style>{`
