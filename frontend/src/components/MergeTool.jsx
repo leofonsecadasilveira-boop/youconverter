@@ -1,80 +1,26 @@
+
 import { useState } from 'react'
+import { PDFDocument } from 'pdf-lib'
 import DropZone from './DropZone.jsx'
-
-const API_URL = import.meta.env.VITE_API_URL || ''
-
-export default function MergeTool() {
+export default function MergeTool({ isDark }) {
   const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
-
-  async function handleMerge() {
-    if (files.length < 2) return alert('Selecione pelo menos 2 PDFs')
+  const PURPLE = '#7C3AED'
+  async function handleMerge(){
+    if(files.length<2) return alert('Selecione pelo menos 2 PDFs')
     setLoading(true)
-    try {
-      const fd = new FormData()
-      files.forEach(f => fd.append('files', f)) // tem que ser 'files' igual ao backend
-
-      const res = await fetch(`${API_URL}/api/merge`, { 
-        method: 'POST', 
-        body: fd 
-      })
-
-      if (!res.ok) {
-        // tenta ler erro como json, se falhar pega como texto
-        let msg = 'Erro ao juntar PDFs'
-        try {
-          const err = await res.json()
-          msg = err.error || msg
-        } catch {
-          msg = await res.text()
-        }
-        throw new Error(msg)
-      }
-
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `youconverter-merged-${Date.now()}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
-    } catch (e) {
-      console.error(e)
-      alert(e.message || 'Falha na conexão com a API. Verifique se o backend está no ar em /api/merge')
-    } finally {
-      setLoading(false)
-    }
+    try{
+      const mergedPdf = await PDFDocument.create()
+      for(const file of files){ const bytes=await file.arrayBuffer(); const pdf=await PDFDocument.load(bytes); const pages=await mergedPdf.copyPages(pdf,pdf.getPageIndices()); pages.forEach(p=>mergedPdf.addPage(p)) }
+      const mergedBytes = await mergedPdf.save()
+      const blob=new Blob([mergedBytes],{type:'application/pdf'}); const url=URL.createObjectURL(blob)
+      const a=document.createElement('a'); a.href=url; a.download=`youconverter-juntado-${Date.now()}.pdf`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000)
+    }catch(e){alert('Erro: '+e.message)} finally{setLoading(false)}
   }
-
-  return (
-    <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Juntar PDFs</h2>
-      <DropZone onFiles={setFiles} />
-      {files.length > 0 && (
-        <p style={{ marginTop: 12, fontSize: 13, color: '#6b7280' }}>
-          {files.length} arquivos selecionados • arraste para reordenar em breve
-        </p>
-      )}
-      <button 
-        onClick={handleMerge} 
-        disabled={loading || files.length < 2} 
-        style={{ 
-          marginTop: 20, 
-          background: '#7C3AED', 
-          color: '#fff', 
-          border: 0, 
-          padding: '12px 24px', 
-          borderRadius: 10, 
-          fontWeight: 700, 
-          cursor: loading ? 'not-allowed' : 'pointer', 
-          width: '100%', 
-          opacity: loading || files.length < 2 ? 0.6 : 1 
-        }}
-      >
-        {loading ? 'Juntando...' : 'Juntar agora ↓'}
-      </button>
-    </div>
-  )
+  return (<div>
+    <h2 style={{fontSize:22,fontWeight:800,marginBottom:16,color:isDark?'#f3f4f6':'#111827'}}>Juntar PDFs</h2>
+    <DropZone onFiles={(f)=>setFiles(prev=>[...prev,...f])} multiple isDark={isDark} accept=".pdf" />
+    {files.length>0 && <div style={{marginTop:12, display:'flex', flexDirection:'column', gap:8}}>{files.map((f,i)=><div key={i} style={{background:isDark?'#27272a':'#F5F3FF', border:`1px solid ${isDark?'#3f3f46':'#DDD6FE'}`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between'}}><span style={{fontSize:12,fontWeight:600,color:isDark?'#f3f4f6':'#5B21B6'}}>{i+1}. {f.name}</span><button onClick={()=>setFiles(files.filter((_,idx)=>idx!==i))} style={{background:'transparent',border:0,color:'#7C3AED',fontWeight:700,cursor:'pointer'}}>X</button></div>)}</div>}
+    <button onClick={handleMerge} disabled={loading||files.length<2} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:10,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||files.length<2?0.6:1}}>{loading?'Juntando...':`Juntar ${files.length?`(${files.length})`:''} ↓`}</button>
+  </div>)
 }
