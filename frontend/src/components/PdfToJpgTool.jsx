@@ -1,51 +1,42 @@
 import { useState } from 'react'
-import * as pdfjsLib from 'pdfjs-dist'
+import { PDFDocument } from 'pdf-lib'
 import DropZone from './DropZone.jsx'
 
-import pdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker
-
-export default function PdfToJpgTool({ isDark }) {
-  const [file, setFile] = useState(null)
+export default function JpgToPdfTool({ isDark }) {
+  const [files, setFiles] = useState([])
   const [loading, setLoading] = useState(false)
-  const [progress, setProgress] = useState('')
-  const [quality, setQuality] = useState('alta')
 
   const PURPLE = '#7C3AED'
   const titleColor = isDark ? '#f3f4f6' : '#111827'
+  const descBg = isDark ? '#1F1F23' : '#f9fafb'
+  const descColor = isDark ? '#9CA3AF' : '#6b7280'
 
   async function handleConvert() {
-    if (!file) return alert('Selecione 1 PDF')
+    if (!files.length) return alert('Selecione as imagens')
     setLoading(true)
     try {
-      const buffer = await file.arrayBuffer()
-      const pdf = await pdfjsLib.getDocument({ data: buffer }).promise
-      const scale = quality === 'alta' ? 2.5 : 1.5
-      const jpegQuality = quality === 'alta' ? 0.92 : 0.75
-
-      for (let i = 0; i < pdf.numPages; i++) {
-        setProgress(`Baixando página ${i + 1}/${pdf.numPages}...`)
-        const page = await pdf.getPage(i + 1)
-        const viewport = page.getViewport({ scale })
-        const canvas = document.createElement('canvas')
-        const ctx = canvas.getContext('2d')
-        ctx.imageSmoothingEnabled = true
-        ctx.imageSmoothingQuality = 'high'
-        canvas.width = viewport.width
-        canvas.height = viewport.height
-        await page.render({ canvasContext: ctx, viewport }).promise
-        
-        const dataUrl = canvas.toDataURL('image/jpeg', jpegQuality)
-        const a = document.createElement('a')
-        a.href = dataUrl
-        a.download = `${file.name.replace(/\.pdf$/i,'')}-pagina-${i+1}.jpg`
-        document.body.appendChild(a)
-        a.click()
-        a.remove()
-        await new Promise(r => setTimeout(r, 300))
+      const pdfDoc = await PDFDocument.create()
+      for (const file of files) {
+        const bytes = await file.arrayBuffer()
+        let img
+        if (file.type.includes('png') || file.name.toLowerCase().endsWith('.png')) {
+          img = await pdfDoc.embedPng(bytes)
+        } else {
+          img = await pdfDoc.embedJpg(bytes)
+        }
+        const page = pdfDoc.addPage([img.width, img.height])
+        page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height })
       }
-      setProgress(`✅ ${pdf.numPages} imagens baixadas!`)
-      setTimeout(()=>setProgress(''), 3000)
+      const pdfBytes = await pdfDoc.save()
+      const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `youconverter-imagens-${Date.now()}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 1000)
     } catch (e) {
       console.error(e)
       alert('Erro: ' + e.message)
@@ -54,78 +45,37 @@ export default function PdfToJpgTool({ isDark }) {
     }
   }
 
-  // ESTILO CORRIGIDO - segue o padrão do CompressTool
-  const getButtonStyle = (active) => {
-    if (active) {
-      return {
-        padding:'12px',
-        borderRadius:10,
-        border:`2px solid ${PURPLE}`,
-        background: isDark ? '#2a1f3d' : '#f5f3ff',
-        cursor:'pointer',
-        transition:'all .2s'
-      }
-    } else {
-      return {
-        padding:'12px',
-        borderRadius:10,
-        border: isDark ? '1px solid #27272a' : '1px solid #e5e7eb',
-        background: isDark ? '#1f1f1f' : 'white',
-        cursor:'pointer',
-        transition:'all .2s'
-      }
-    }
-  }
-
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16, color: titleColor }}>PDF para JPG</h2>
-      
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, marginBottom:12}}>
-        <button onClick={()=>setQuality('alta')} style={getButtonStyle(quality==='alta')}>
-          <div style={{fontWeight:800, fontSize:12, color: quality==='alta' ? PURPLE : (isDark ? '#e5e7eb' : '#111827')}}>Alta qualidade</div>
-          <div style={{fontSize:10, color: isDark ? '#9ca3af' : '#6b7280', marginTop:4}}>180 DPI • Recomendado</div>
-        </button>
-        <button onClick={()=>setQuality('media')} style={getButtonStyle(quality==='media')}>
-          <div style={{fontWeight:800, fontSize:12, color: quality==='media' ? PURPLE : (isDark ? '#e5e7eb' : '#111827')}}>Arquivo menor</div>
-          <div style={{fontSize:10, color: isDark ? '#9ca3af' : '#6b7280', marginTop:4}}>108 DPI</div>
-        </button>
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16, color: titleColor }}>JPG para PDF</h2>
+      <div style={{background: descBg, borderRadius:8, padding:'8px 12px', fontSize:11, color: descColor, marginBottom:16, textAlign:'center', border: isDark ? '1px solid #2a2a2a' : '1px solid #f3f4f6'}}>
+        Converta JPG, PNG em PDF • Mantém qualidade original • 100% no seu PC
       </div>
 
-      <div style={{
-        background: isDark ? '#1a1a1a' : '#f9fafb',
-        border: isDark ? '1px solid #27272a' : '1px solid #f3f4f6',
-        borderRadius:8, padding:'8px 12px', fontSize:11,
-        color: isDark ? '#9ca3af' : '#6b7280',
-        marginBottom:16, textAlign:'center'
-      }}>
-        Cada página vira 1 JPG em alta qualidade • 100% no seu PC
-      </div>
+      <DropZone 
+        onFiles={(f) => setFiles(prev => [...prev, ...f])} 
+        multiple 
+        isDark={isDark}
+      />
 
-      <DropZone onFiles={(f) => setFile(f[0])} single isDark={isDark} />
-
-      {file && (
-        <div style={{
-          marginTop:12,
-          background: isDark ? '#2a1f4d' : '#F5F3FF',
-          border: `1px solid ${isDark ? '#4c1d95' : '#DDD6FE'}`,
-          padding:'10px 12px', borderRadius:8,
-          display:'flex', justifyContent:'space-between'
-        }}>
-          <span style={{fontSize:12, fontWeight:600, color: isDark ? '#c4b5fd' : '#5B21B6'}}>📄 {file.name}</span>
-          <button onClick={()=>setFile(null)} style={{background:'transparent', border:0, color:PURPLE, fontWeight:700, cursor:'pointer'}}>X</button>
+      {files.length > 0 && (
+        <div style={{marginTop:12, display:'flex', flexDirection:'column', gap:8}}>
+          {files.map((f, i) => (
+            <div key={i} style={{background: isDark ? '#2a1f4d' : '#F5F3FF', border:`1px solid ${isDark ? '#4c1d95' : '#DDD6FE'}`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+              <span style={{fontSize:12, fontWeight:600, color: isDark ? '#c4b5fd' : '#5B21B6', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:'85%'}}>
+                {i+1}. 🖼 {f.name} - {(f.size/1024/1024).toFixed(2)} MB
+              </span>
+              <button onClick={()=>setFiles(files.filter((_, idx)=> idx!==i))} style={{background:'transparent', border:0, color:PURPLE, fontWeight:700, cursor:'pointer'}}>X</button>
+            </div>
+          ))}
+          <button onClick={()=>setFiles([])} style={{fontSize:11, background:'transparent', border:0, color: descColor, cursor:'pointer', textAlign:'center', marginTop:4}}>Limpar tudo</button>
         </div>
       )}
 
-      {progress && <div style={{marginTop:10, fontSize:12, color:PURPLE, fontWeight:600, textAlign:'center'}}>{progress}</div>}
-
-      <button onClick={handleConvert} disabled={loading || !file} style={{
-        marginTop: 16, background: PURPLE, color: '#fff', border: 0,
-        padding: '14px 24px', borderRadius: 10, fontWeight: 800,
-        cursor: 'pointer', width: '100%', opacity: loading || !file ? 0.6 : 1
-      }}>
-        {loading ? (progress || 'Convertendo...') : 'Converter para JPG ↓'}
+      <button onClick={handleConvert} disabled={loading || !files.length} style={{ marginTop: 16, background: PURPLE, color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading || !files.length ? 0.6 : 1 }}>
+        {loading ? 'Convertendo...' : `Converter ${files.length ? `(${files.length} imagens)` : ''} para PDF ↓`}
       </button>
+      <p style={{marginTop:8, fontSize:11, color: isDark ? '#9ca3af' : '#6B7280', textAlign:'center'}}>Ordem das imagens = ordem no PDF • Suporta JPG e PNG • Até 50MB</p>
     </div>
   )
 }
