@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { PDFDocument } from 'pdf-lib'
 import * as pdfjsLib from 'pdfjs-dist'
 import DropZone from './DropZone.jsx'
@@ -11,7 +11,7 @@ export default function CompressTool({ isDark }) {
   const [stats, setStats] = useState(null)
   const [mode, setMode] = useState('leve')
   const [progress, setProgress] = useState('')
-  const PURPLE = '#7C3AED'
+  const PURPLE = '#5B21B6'
   const titleColor = isDark ? '#f3f4f6' : '#111827'
 
   const MODES = {
@@ -34,7 +34,7 @@ export default function CompressTool({ isDark }) {
 
   return (
     <div>
-      <h2 style={{fontSize:22,fontWeight:800,marginBottom:16,color:titleColor}}>Comprimir PDF</h2>
+      <h2 style={{fontSize:22,fontWeight:800,marginBottom:12,color:titleColor}}>Comprimir PDF</h2>
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12}}>
         {Object.entries(MODES).map(([k,m])=>(
           <button key={k} onClick={()=>setMode(k)} style={getBtn(mode===k)}>
@@ -43,14 +43,15 @@ export default function CompressTool({ isDark }) {
           </button>
         ))}
       </div>
-      <div style={{background: isDark?'rgba(124,58,237,0.15)':'rgba(124,58,237,0.08)', border:`1px solid ${PURPLE}`, borderRadius:8, padding:'8px 12px', fontSize:11, color:isDark?'#ddd6fe':PURPLE, marginBottom:16, textAlign:'center', fontWeight:600}}>
+      {/* CORRIGIDO: estilo discreto cinza como você pediu - igual ao print image_e9de6f.png */}
+      <div style={{background: isDark ? '#27272a' : '#f3f4f6', borderRadius:8, padding:'8px 12px', fontSize:11, color: isDark ? '#a1a1aa' : '#6b7280', marginBottom:16, textAlign:'center'}}>
         {MODES[mode].desc}
       </div>
       <DropZone onFiles={(f)=>setFile(f[0])} single isDark={isDark} accept=".pdf" />
       {file && <div style={{marginTop:12,fontSize:13,fontWeight:600,color:isDark?'#f3f4f6':'#111827', background:isDark?'#27272a':'#f3f4f6', padding:'10px 12px', borderRadius:8}}>📄 {file.name}</div>}
       {progress && <div style={{marginTop:10,fontSize:12,color:PURPLE,fontWeight:600,textAlign:'center'}}>{progress}</div>}
       {stats && <div style={{marginTop:12, background:isDark?'#052e16':'#ECFDF5', border:'1px solid #A7F3D0', padding:'12px', borderRadius:8, fontSize:13, color:isDark?'#6ee7b7':'#065F46', fontWeight:700, textAlign:'center'}}>✅ {stats.from} MB → {stats.to} MB {stats.pct>0?`(-${stats.pct}%)`:'(já otimizado)'}</div>}
-      <button onClick={handle} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:12,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||!file?0.45:1, boxShadow: loading||!file?'none':'0 4px 14px rgba(124,58,237,0.35)'}}>
+      <button onClick={handle} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:12,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||!file?0.45:1, boxShadow: loading||!file?'none':'0 4px 14px rgba(91,33,182,0.35)'}}>
         {loading?progress||'Comprimindo...':`Comprimir - ${MODES[mode].label} ↓`}
       </button>
     </div>
