@@ -34,9 +34,9 @@ export default function MergeTool({ isDark }) {
 
   return (
     <div>
-      <h2 style={{fontSize:22,fontWeight:800, boxShadow:'0 4px 14px rgba(124,58,237,0.35)',marginBottom:16,color:titleColor}}>Juntar PDF 📑</h2>
+      <h2 style={{fontSize:22,fontWeight:800,marginBottom:16,color:titleColor}}>Juntar PDF 📑</h2>
       <div style={{background:descBg, border:descBorder, borderRadius:8, padding:'10px 12px', fontSize:11, color:descColor, marginBottom:16, textAlign:'center', fontWeight:600}}>
-        🔒 YouConverter Engine • 100% no seu navegador • Seguro e privado
+        🔒 Feito no Brasil • Privado e seguro • Seguro e privado
       </div>
       <div style={{border:`2px dashed ${PURPLE}`, borderRadius:12, padding:24, textAlign:'center', background: isDark ? '#1a1a1a' : '#fafafa'}}>
         <label style={{display:'inline-block', background:PURPLE, color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14}}>Escolher Arquivos
@@ -46,13 +46,13 @@ export default function MergeTool({ isDark }) {
       </div>
       <DropZone onFiles={(f)=>setFiles(prev=>[...prev,...f])} multiple isDark={isDark} single={false} hideUI />
       {files.length>0 && <div style={{marginTop:12, display:'flex', flexDirection:'column', gap:8}}>
-        {files.map((f,i)=><div key={i} style={{background:isDark?'#2a1f4d':'#F5F3FF', border:`1px solid ${isDark?'#4c1d95':'#DDD6FE'}`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+        {files.map((f,i)=><div key={i} style={{background:isDark?'#2a1f4d':'#F5F3FF', border:`1px solid #7C3AED`, padding:'10px 12px', borderRadius:8, display:'flex', justifyContent:'space-between', alignItems:'center'}}>
           <span style={{fontSize:12,fontWeight:600,color:isDark?'#c4b5fd':'#5B21B6', maxWidth:'85%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{i+1}. 📄 {f.name}</span>
           <button onClick={()=>setFiles(files.filter((_,idx)=>idx!==i))} style={{background:'transparent',border:0,color:PURPLE,fontWeight:700,cursor:'pointer'}}>X</button>
         </div>)}
         <button onClick={()=>setFiles([])} style={{fontSize:11, background:'transparent', border:0, color:isDark?'#9ca3af':'#6b7280', cursor:'pointer', textAlign:'center'}}>Limpar tudo</button>
       </div>}
-      <button onClick={handleMerge} disabled={loading||files.length<2} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:12,fontWeight:800, boxShadow:'0 4px 14px rgba(124,58,237,0.35)',cursor:'pointer',width:'100%',opacity:loading||files.length<2?0.6:1}}>
+      <button onClick={handleMerge} disabled={loading||files.length<2} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:10,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||files.length<2?0.6:1}}>
         {loading?'Juntando...':`Juntar ${files.length?`(${files.length} PDFs)`:''} ↓`}
       </button>
     </div>

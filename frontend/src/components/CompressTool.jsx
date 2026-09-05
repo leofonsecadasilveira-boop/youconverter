@@ -26,35 +26,31 @@ export default function CompressTool({ isDark }) {
   async function handle(){ if(!file) return alert('Selecione PDF'); setLoading(true); setStats(null); try{ const r=mode==='leve'?await compressLeve():await compressPerda(mode); const blob=new Blob([r.bytes],{type:'application/pdf'}); const saved=Math.round((1-blob.size/r.original)*100); setStats({from:(r.original/1024/1024).toFixed(2),to:(blob.size/1024/1024).toFixed(2),pct:saved>0?saved:0}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=file.name.replace('.pdf','')+`-${mode}.pdf`; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){alert('Erro: '+e.message)} finally{setLoading(false); setProgress('')} }
 
   const getBtn = (active)=>({
-    padding:'12px 8px', borderRadius:12, textAlign:'center', cursor:'pointer',
+    padding:'12px 8px', borderRadius:10, textAlign:'center', cursor:'pointer',
     border: active?`2px solid ${PURPLE}`: isDark?'1px solid #27272a':'1px solid #e5e7eb',
-    background: active? (isDark?'#2a1f3d':'#F5F3FF') : (isDark?'#1a1a1a':'white')
+    background: active? PURPLE : (isDark?'#18181b':'white'),
+    color: active? '#fff' : (isDark?'#f3f4f6':'#111827')
   })
 
   return (
     <div>
-      <h2 style={{fontSize:22,fontWeight:800, boxShadow:'0 4px 14px rgba(124,58,237,0.35)',marginBottom:16,color:titleColor}}>Comprimir PDF</h2>
+      <h2 style={{fontSize:22,fontWeight:800,marginBottom:16,color:titleColor}}>Comprimir PDF</h2>
       <div style={{display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8, marginBottom:12}}>
         {Object.entries(MODES).map(([k,m])=>(
           <button key={k} onClick={()=>setMode(k)} style={getBtn(mode===k)}>
-            <div style={{fontWeight:800, boxShadow:'0 4px 14px rgba(124,58,237,0.35)',fontSize:12,color:mode===k?PURPLE:(isDark?'#f3f4f6':'#111827'), lineHeight:'1.2'}}>{m.label}</div>
-            <div style={{fontSize:10,color:mode===k?PURPLE:(isDark?'#9ca3af':'#6b7280'), marginTop:4, fontWeight:600}}>{m.badge}</div>
+            <div style={{fontWeight:800,fontSize:12,color: mode===k ? '#fff' : (isDark?'#f3f4f6':'#111827'), lineHeight:'1.2'}}>{m.label}</div>
+            <div style={{fontSize:10,color: mode===k ? '#e9d5ff' : (isDark?'#a1a1aa':'#6b7280'), marginTop:4, fontWeight:600}}>{m.badge}</div>
           </button>
         ))}
       </div>
-      <div style={{background: isDark?'rgba(124,58,237,0.12)':'rgba(124,58,237,0.08)', border:`1px solid ${PURPLE}`, borderRadius:8, padding:'8px 12px', fontSize:11, color:isDark?'#c4b5fd':PURPLE, marginBottom:16, textAlign:'center', fontWeight:600}}>
+      <div style={{background: isDark?'rgba(124,58,237,0.15)':'rgba(124,58,237,0.08)', border:`1px solid ${PURPLE}`, borderRadius:8, padding:'8px 12px', fontSize:11, color:isDark?'#ddd6fe':PURPLE, marginBottom:16, textAlign:'center', fontWeight:600}}>
         {MODES[mode].desc}
       </div>
-      <div style={{border:`2px dashed ${PURPLE}`, borderRadius:12, padding:24, textAlign:'center', background: isDark?'#1a1a1a':'#fafafa'}}>
-        <label style={{display:'inline-block', background:PURPLE, color:'#fff', padding:'10px 20px', borderRadius:8, cursor:'pointer', fontWeight:700, fontSize:14}}>Escolher Arquivo
-          <input type="file" accept="application/pdf" onChange={e=>setFile(e.target.files?.[0]||null)} style={{display:'none'}} />
-        </label>
-        <div style={{marginTop:10,fontSize:12,color:isDark?'#a1a1aa':'#6b7280'}}>Arraste um PDF ou clique acima</div>
-        {file && <div style={{marginTop:12,fontSize:13,fontWeight:600,color:isDark?'#f3f4f6':'#111827'}}>📄 {file.name}</div>}
-      </div>
+      <DropZone onFiles={(f)=>setFile(f[0])} single isDark={isDark} accept=".pdf" />
+      {file && <div style={{marginTop:12,fontSize:13,fontWeight:600,color:isDark?'#f3f4f6':'#111827', background:isDark?'#27272a':'#f3f4f6', padding:'10px 12px', borderRadius:8}}>📄 {file.name}</div>}
       {progress && <div style={{marginTop:10,fontSize:12,color:PURPLE,fontWeight:600,textAlign:'center'}}>{progress}</div>}
       {stats && <div style={{marginTop:12, background:isDark?'#052e16':'#ECFDF5', border:'1px solid #A7F3D0', padding:'12px', borderRadius:8, fontSize:13, color:isDark?'#6ee7b7':'#065F46', fontWeight:700, textAlign:'center'}}>✅ {stats.from} MB → {stats.to} MB {stats.pct>0?`(-${stats.pct}%)`:'(já otimizado)'}</div>}
-      <button onClick={handle} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:12,fontWeight:800, boxShadow:'0 4px 14px rgba(124,58,237,0.35)',cursor:'pointer',width:'100%',opacity:loading||!file?0.6:1}}>
+      <button onClick={handle} disabled={loading||!file} style={{marginTop:16,background:PURPLE,color:'#fff',border:0,padding:'14px 24px',borderRadius:12,fontWeight:800,cursor:'pointer',width:'100%',opacity:loading||!file?0.45:1, boxShadow: loading||!file?'none':'0 4px 14px rgba(124,58,237,0.35)'}}>
         {loading?progress||'Comprimindo...':`Comprimir - ${MODES[mode].label} ↓`}
       </button>
     </div>

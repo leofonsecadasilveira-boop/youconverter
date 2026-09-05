@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 
-export default function DropZone({ onFiles, multiple=false, single=false, isDark, hideUI=false }) {
+export default function DropZone({ onFiles, multiple=false, single=false, isDark, hideUI=false, accept=".pdf,.jpg,.jpeg,.png" }) {
   const [dragOver, setDragOver] = useState(false)
   const PURPLE = '#7C3AED'
 
@@ -46,14 +46,14 @@ export default function DropZone({ onFiles, multiple=false, single=false, isDark
         borderRadius:12,
         padding:'28px 20px',
         textAlign:'center',
-        background: isDark ? (dragOver ? '#2a1f3d' : '#1a1a1a') : (dragOver ? '#F5F3FF' : '#fafafa'),
+        background: isDark ? (dragOver ? '#2a1f3d' : '#18181b') : (dragOver ? '#F5F3FF' : '#fafafa'),
         transition:'all 0.2s',
         cursor:'pointer'
       }}
     >
       <label style={{display:'inline-block', background:PURPLE, color:'#fff', padding:'12px 24px', borderRadius:10, cursor:'pointer', fontWeight:800, fontSize:14, boxShadow:'0 4px 12px rgba(124,58,237,0.3)'}}>
         Escolher Arquivo
-        <input type="file" accept=".pdf,.jpg,.jpeg,.png" multiple={multiple && !single} onChange={handleChange} style={{display:'none'}} />
+        <input type="file" accept={accept} multiple={multiple && !single} onChange={handleChange} style={{display:'none'}} />
       </label>
       <div style={{marginTop:12,fontSize:12,color:isDark?'#a1a1aa':'#6b7280', fontWeight:500}}>
         Arraste um PDF ou clique acima

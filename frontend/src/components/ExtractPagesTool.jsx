@@ -7,6 +7,8 @@ export default function ExtractTool({ isDark }) {
   const [pages, setPages] = useState('')
   const [loading, setLoading] = useState(false)
   const [total, setTotal] = useState(0)
+  const PURPLE='#7C3AED'
+  const titleColor = isDark ? '#f3f4f6' : '#111827'
 
   async function onFile(f) {
     setFile(f)
@@ -62,22 +64,22 @@ export default function ExtractTool({ isDark }) {
 
   return (
     <div>
-      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16 }}>Extrair Páginas</h2>
-      <div style={{background: isDark ? '#27272a' : '#1F1F23', borderRadius:8, padding:'8px 12px', fontSize:11, color:'#9CA3AF', marginBottom:16, textAlign:'center'}}>
-        Escolha páginas • Ex: 1,3,5-7 • 100% no seu PC
+      <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 16, color:titleColor }}>Extrair Páginas</h2>
+      <div style={{background: isDark ? '#27272a' : '#f3f4f6', borderRadius:8, padding:'8px 12px', fontSize:11, color:isDark?'#a1a1aa':'#6b7280', marginBottom:16, textAlign:'center'}}>
+        Escolha páginas • Ex: 1,3,5-7 • Privado e seguro
       </div>
-      <DropZone onFiles={(f) => onFile(f[0])} single />
+      <DropZone onFiles={(f) => onFile(f[0])} single isDark={isDark} accept=".pdf" />
       {file && (
-        <div style={{marginTop:12, background:'#F5F3FF', border:'1px solid #DDD6FE', padding:'10px 12px', borderRadius:8}}>
+        <div style={{marginTop:12, background:isDark?'#2a1f4d':'#F5F3FF', border:'1px solid #7C3AED', padding:'10px 12px', borderRadius:8}}>
           <div style={{display:'flex', justifyContent:'space-between'}}>
-            <span style={{fontSize:12, fontWeight:600, color:'#5B21B6'}}>📄 {file.name} ({total} págs)</span>
-            <button onClick={()=>{setFile(null); setTotal(0)}} style={{background:'transparent', border:0, color:'#7C3AED', fontWeight:700, cursor:'pointer'}}>X</button>
+            <span style={{fontSize:12, fontWeight:600, color:isDark?'#ddd6fe':'#5B21B6'}}>📄 {file.name} ({total} págs)</span>
+            <button onClick={()=>{setFile(null); setTotal(0)}} style={{background:'transparent', border:0, color:PURPLE, fontWeight:700, cursor:'pointer'}}>X</button>
           </div>
-          <input value={pages} onChange={e=>setPages(e.target.value)} placeholder="Ex: 1,3,5-7" style={{marginTop:10, width:'100%', padding:'12px', borderRadius:8, border:'1px solid #3f3f46', background:'#18181b', color:'#fff', fontSize:14}} />
+          <input value={pages} onChange={e=>setPages(e.target.value)} placeholder="Ex: 1,3,5-7" style={{marginTop:10, width:'100%', padding:'12px', borderRadius:8, border:'1px solid #3f3f46', background:isDark?'#18181b':'white', color:isDark?'#fff':'#111827', fontSize:14}} />
           <div style={{fontSize:10, color:'#9CA3AF', marginTop:6}}>Dica: 1-3 extrai páginas 1,2,3 • 1,5 extrai só 1 e 5</div>
         </div>
       )}
-      <button onClick={handleExtract} disabled={loading || !file} style={{ marginTop: 16, background: '#7C3AED', color: '#fff', border: 0, padding: '14px 24px', borderRadius: 10, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading || !file ? 0.6 : 1 }}>
+      <button onClick={handleExtract} disabled={loading || !file} style={{ marginTop: 16, background: PURPLE, color: '#fff', border: 0, padding: '14px 24px', borderRadius: 12, fontWeight: 800, cursor: 'pointer', width: '100%', opacity: loading || !file ? 0.45 : 1, boxShadow: loading||!file?'none':'0 4px 14px rgba(124,58,237,0.35)' }}>
         {loading ? 'Extraindo...' : 'Extrair páginas ↓'}
       </button>
     </div>
