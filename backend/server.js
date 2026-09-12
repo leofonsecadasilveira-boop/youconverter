@@ -7,104 +7,83 @@ import path from 'path';
 import os from 'os';
 import archiver from 'archiver';
 import dotenv from 'dotenv';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { createWorker } from 'tesseract.js';
 
 dotenv.config();
-
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+app.use(helmet());
+app.use(rateLimit({ windowMs: 15*60*1000, max: 200 }));
+app.use(cors({ origin: true }));
 app.use(express.json());
 
-// Na Vercel só pode escrever em /tmp
-const TMP_DIR = path.join(os.tmpdir(), 'youconverter-tmp');
-if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR, { recursive: true });
+const TMP = path.join(os.tmpdir(), 'youconverter-tmp');
+if (!fs.existsSync(TMP)) fs.mkdirSync(TMP, { recursive: true });
+const del = f => { try{ fs.unlinkSync(f) }catch{} };
+const upload = multer({ storage: multer.diskStorage({
+  destination: (_,__,cb) => cb(null, TMP),
+  filename: (_,f,cb) => cb(null, `${Date.now()}-${f.originalname.replace(/[^a-z0-9.-]/gi,'_')}`)
+}), limits: { fileSize: 50*1024*1024 } });
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, TMP_DIR),
-  filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`)
-});
+app.get('/api', (_,res) => res.send('YouConverter API 🚀'));
+app.get('/api/health', (_,res) => res.json({ status: 'ok' }));
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }
-});
-
-app.get('/api', (req, res) => res.send('YouConverter API - Online 🚀'));
-app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
-
-app.post('/api/merge', upload.any(), async (req, res) => {
-  let files = req.files || [];
+// --- MERGE / SPLIT / COMPRESS (mesma lógica, só que enxuta) ---
+app.post('/api/merge', upload.any(), async (req,res) => {
+  const files = req.files || [];
+  if (files.length < 2) return res.status(400).json({ error: 'Envie 2 PDFs' });
   try {
-    if (!files || files.length < 2) {
-      return res.status(400).json({ error: `Envie pelo menos 2 PDFs. Recebi ${files?.length || 0}` });
+    const merged = await PDFDocument.create();
+    for (const f of files) {
+      const pdf = await PDFDocument.load(fs.readFileSync(f.path));
+      (await merged.copyPages(pdf, pdf.getPageIndices())).forEach(p=>merged.addPage(p));
     }
-    const mergedPdf = await PDFDocument.create();
-    for (const file of files) {
-      const bytes = fs.readFileSync(file.path);
-      const pdf = await PDFDocument.load(bytes);
-      const pages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
-      pages.forEach(p => mergedPdf.addPage(p));
-    }
-    const mergedBytes = await mergedPdf.save();
-    const outPath = path.join(TMP_DIR, `merged-${Date.now()}.pdf`);
-    fs.writeFileSync(outPath, mergedBytes);
-    files.forEach(f => { try{ fs.unlinkSync(f.path) }catch{} });
-    res.download(outPath, 'youconverter-merged.pdf', () => { try{ fs.unlinkSync(outPath) }catch{} });
-  } catch (e) {
-    console.error('MERGE ERROR:', e);
-    try { files.forEach(f => fs.unlinkSync(f.path)) } catch {}
-    res.status(500).json({ error: 'Erro ao juntar PDFs: ' + e.message });
-  }
+    const out = path.join(TMP, `merged-${Date.now()}.pdf`);
+    fs.writeFileSync(out, await merged.save());
+    files.forEach(f=>del(f.path));
+    res.download(out, 'merged.pdf', ()=>del(out));
+  } catch(e){ files.forEach(f=>del(f.path)); res.status(500).json({ error: e.message }); }
 });
 
-app.post('/api/split', upload.any(), async (req, res) => {
-  let file = req.files && req.files[0];
+app.post('/api/split', upload.any(), async (req,res) => {
+  const f = req.files?.[0]; if(!f) return res.status(400).json({ error: 'Envie 1 PDF' });
   try {
-    if (!file) return res.status(400).json({ error: 'Envie 1 PDF' });
-    const bytes = fs.readFileSync(file.path);
-    const pdf = await PDFDocument.load(bytes);
-    res.setHeader('Content-Type', 'application/zip');
-    res.setHeader('Content-Disposition', `attachment; filename=youconverter-split-${Date.now()}.zip`);
-    const archive = archiver('zip', { zlib: { level: 9 } });
-    archive.pipe(res);
-    for (let i = 0; i < pdf.getPageCount(); i++) {
-      const newPdf = await PDFDocument.create();
-      const [page] = await newPdf.copyPages(pdf, [i]);
-      newPdf.addPage(page);
-      const newBytes = await newPdf.save();
-      archive.append(Buffer.from(newBytes), { name: `pagina-${i+1}.pdf` });
+    const pdf = await PDFDocument.load(fs.readFileSync(f.path));
+    res.set({ 'Content-Type':'application/zip', 'Content-Disposition':'attachment; filename=split.zip' });
+    const zip = archiver('zip'); zip.pipe(res);
+    for(let i=0;i<pdf.getPageCount();i++){
+      const n = await PDFDocument.create(); const [p] = await n.copyPages(pdf,[i]); n.addPage(p);
+      zip.append(Buffer.from(await n.save()), { name: `pagina-${i+1}.pdf` });
     }
-    await archive.finalize();
-    try{ fs.unlinkSync(file.path) }catch{}
-  } catch (e) {
-    console.error('SPLIT ERROR:', e);
-    try { if (file) fs.unlinkSync(file.path) } catch {}
-    if (!res.headersSent) res.status(500).json({ error: 'Erro ao dividir PDF' });
-  }
+    await zip.finalize(); del(f.path);
+  } catch(e){ del(f.path); res.status(500).json({ error: 'Erro split' }); }
 });
 
-app.post('/api/compress', upload.any(), async (req, res) => {
-  let file = req.files && req.files[0];
+app.post('/api/compress', upload.any(), async (req,res) => {
+  const f = req.files?.[0]; if(!f) return res.status(400).json({ error: 'Envie 1 PDF' });
   try {
-    if (!file) return res.status(400).json({ error: 'Envie 1 PDF' });
-    const bytes = fs.readFileSync(file.path);
-    const pdf = await PDFDocument.load(bytes);
-    const compressedBytes = await pdf.save({ useObjectStreams: true });
-    try{ fs.unlinkSync(file.path) }catch{}
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=youconverter-compressed.pdf');
-    res.send(Buffer.from(compressedBytes));
-  } catch (e) {
-    console.error('COMPRESS ERROR:', e);
-    try { if (file) fs.unlinkSync(file.path) } catch {}
-    if (!res.headersSent) res.status(500).json({ error: 'Erro ao comprimir' });
-  }
+    const pdf = await PDFDocument.load(fs.readFileSync(f.path));
+    const bytes = await pdf.save({ useObjectStreams: true }); del(f.path);
+    res.set({ 'Content-Type':'application/pdf' }).send(Buffer.from(bytes));
+  } catch(e){ del(f.path); res.status(500).json({ error: 'Erro compress' }); }
 });
 
-// Só roda listen local, na Vercel exporta o app
-if (process.env.NODE_ENV!== 'production') {
-  const PORT = process.env.PORT || 3001;
-  app.listen(PORT, '0.0.0.0', () => console.log(`Backend rodando na porta ${PORT}`));
+// --- LGPD HÍBRIDO 6MB - REGEX OCULTA AQUI, NUNCA NO FRONTEND ---
+const RX = { CPF:/\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g, CNPJ:/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g, RG:/\b\d{2}\.\d{3}\.\d{3}-?[\dX]\b/g };
+app.post('/api/lgpd-scan', rateLimit({ windowMs:5*60*1000, max:20 }), upload.single('pdf'), async (req,res) => {
+  const f = req.file; if(!f) return res.status(400).json({ error: 'Envie PDF' });
+  try {
+    const w = await createWorker('por+eng'); const {data:{text}} = await w.recognize(f.path); await w.terminate(); del(f.path);
+    let achados=[]; for(const [k,r] of Object.entries(RX)){ const m=text.match(r); if(m) achados.push(`${k}: ${[...new Set(m)].slice(0,10).join(', ')}`); }
+    res.json({ achados: achados.length? achados : ['✅ Nenhum dado encontrado'] });
+  } catch(e){ del(f.path); res.status(500).json({ error: e.message }); }
+});
+
+app.post('/api/ocr-lgpd', (req,res)=>{ req.url='/api/lgpd-scan'; app.handle(req,res); });
+
+if(process.env.NODE_ENV!=='production'){
+  app.listen(process.env.PORT||3001, ()=>console.log('Backend 3001'));
 }
-
 export default app;
