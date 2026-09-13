@@ -1,5 +1,6 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect, lazy, Suspense, createContext, useContext } from 'react'
+import { BrowserRouter, Routes, Route, Link, useNavigate, Navigate } from 'react-router-dom'
+import { createClient } from '@supabase/supabase-js'
 import Logo from './components/Logo'
 
 const MergeTool = lazy(() => import('./components/MergeTool'))
@@ -11,17 +12,159 @@ const ProtectPdfTool = lazy(() => import('./components/ProtectPdfTool'))
 const RotateTool = lazy(() => import('./components/RotatePdfTool'))
 const ExtractTool = lazy(() => import('./components/ExtractPagesTool'))
 const UnlockTool = lazy(() => import('./components/UnlockPdfTool'))
-
-// Página dedicada - vai usar seu scanner atual exato
 const ScannerLgpdDedicatedPage = lazy(() => import('./Pages/ScannerLgpdPage'))
 
+// ============ SUPABASE CLIENT - CORRIGIDO ANTI TELA BRANCA ============
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+// NÃO quebra se .env faltar - evita tela branca
+let supabase
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ VITE_SUPABASE_URL ou VITE_SUPABASE_ANON_KEY não encontrados em frontend/.env')
+  supabase = {
+    auth: {
+      getSession: async () => ({ data: { session: null } }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+      signInWithOAuth: async () => ({ error: { message: 'Configure VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no frontend/.env e reinicie o npm run dev' } }),
+      signOut: async () => {}
+    },
+    from: () => ({
+      select: () => ({ eq: () => ({ single: async () => ({ data: null }) }) }),
+      insert: () => ({ select: () => ({ single: async () => ({ data: null }) }) })
+    })
+  }
+} else {
+  supabase = createClient(supabaseUrl, supabaseAnonKey)
+}
+export { supabase }
+
+// ============ AUTH CONTEXT COM SUPABASE ============
+const AuthContext = createContext(null)
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!supabaseUrl || !supabaseAnonKey) { setLoading(false); return }
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      if (session?.user) fetchProfile(session.user.id)
+      setLoading(false)
+    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      setUser(session?.user ?? null)
+      if (session?.user) {
+        await fetchProfile(session.user.id)
+      } else {
+        setProfile(null)
+      }
+      setLoading(false)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const fetchProfile = async (userId) => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    if (data) setProfile(data)
+    else {
+      const { data: newProfile } = await supabase.from('profiles').insert({ id: userId, is_premium: false }).select().single()
+      setProfile(newProfile)
+    }
+  }
+
+  const loginWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: import.meta.env.VITE_SITE_URL || window.location.origin }
+    })
+    if (error) alert(error.message)
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+  }
+
+  const value = {
+    user,
+    profile,
+    isPremium: profile?.is_premium || false,
+    loading,
+    loginWithGoogle,
+    logout
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+function useAuth() { return useContext(AuthContext) }
+
+function ProtectedRoute({ children, needPremium = false }) {
+  const { user, isPremium, loading } = useAuth()
+  if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>🔒 Carregando...</div>
+  if (!user) return <Navigate to="/login" replace />
+  if (needPremium && !isPremium) return <Navigate to="/pricing" replace />
+  return children
+}
+
+// ============ LOGIN PAGE COM SUPABASE ============
+function LoginPage() {
+  const { loginWithGoogle } = useAuth()
+  const [isDark] = useState(() => localStorage.getItem('youconverter_theme') === 'dark')
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: isDark ? '#09090b' : '#f9fafb', padding: 20 }}>
+      <div style={{ background: isDark ? '#18181b' : 'white', border: isDark ? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius: 20, padding: 32, maxWidth: 380, width: '100%', textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+        <h1 style={{ fontWeight: 900, fontSize: 22, color: isDark ? 'white' : '#111' }}>Entre no YouConverter</h1>
+        <p style={{ fontSize: 13, opacity: 0.6, marginTop: 8, color: isDark ? '#a1a1aa' : '#6b7280' }}>Supabase Auth • Login com Google 100% grátis</p>
+        {!supabaseUrl && <div style={{ background: '#fef2f2', border: '1px solid #fecaca', padding: 8, borderRadius: 8, fontSize: 11, marginTop: 12, textAlign: 'left' }}>❌ .env não encontrado<br/>Configure VITE_SUPABASE_URL em frontend/.env</div>}
+        <button onClick={loginWithGoogle} style={{ width: '100%', marginTop: 20, background: 'white', border: '1px solid #e5e7eb', borderRadius: 12, padding: '12px 16px', fontWeight: 800, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <span style={{ width: 20, height: 20, backgroundImage: 'url(https://www.svgrepo.com/show/475656/google-color.svg)', backgroundSize: 'contain', display: 'block' }} /> Continuar com Google
+        </button>
+        <div style={{ marginTop: 16 }}><Link to="/" style={{ fontSize: 12, color: '#5B21B6', fontWeight: 700 }}>← Voltar para home</Link></div>
+      </div>
+    </div>
+  )
+}
+
+// ============ PRICING ============
+function PricingPage() {
+  const { user, isPremium } = useAuth()
+  const [isDark] = useState(() => localStorage.getItem('youconverter_theme') === 'dark')
+  const navigate = useNavigate()
+
+  const handleCheckout = async () => {
+    if (!user) { navigate('/login'); return }
+    alert('Integração Stripe/MercadoPago aqui. Por enquanto vou liberar manual no Supabase: UPDATE profiles SET is_premium = true WHERE id = seu_id')
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: isDark ? '#09090b' : '#ffffff', padding: '24px 16px' }}>
+      <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+        <h1 style={{ fontSize: 32, fontWeight: 900, color: isDark ? 'white' : '#111' }}>Premium</h1>
+        <p style={{ opacity: 0.6, marginTop: 8 }}>Scanner LGPD liberado pra quem paga • Supabase controla tudo</p>
+        <div style={{ marginTop: 20, padding: 20, background: isDark ? '#18181b' : 'white', border: '2px solid #5B21B6', borderRadius: 16, maxWidth: 320, margin: '20px auto' }}>
+          <div style={{ fontSize: 28, fontWeight: 900 }}>R$19,90/mês</div>
+          <div style={{ fontSize: 12, marginTop: 10, lineHeight: 1.6 }}>✓ Scanner LGPD<br/>✓ Futuras ferramentas premium</div>
+          <button onClick={handleCheckout} style={{ width: '100%', marginTop: 16, background: '#5B21B6', color: 'white', border: 'none', borderRadius: 10, padding: 12, fontWeight: 900, cursor: 'pointer' }}>{isPremium ? '✅ Você já é Premium' : '🔓 Assinar Premium'}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ICONS (mesmos)
 const iconBase = (url) => ({
   width: '100%', height: '100%', display: 'block',
   backgroundImage: `url(${url})`, backgroundSize: 'contain',
   backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
   transform: 'scale(1.20)', transformOrigin: 'center',
 })
-
 const JuntarPremiumV1Icon = ({ size = 36, isDark = false }) => (
   <span style={{ width: size, height: size, display: 'block', flexShrink: 0, overflow: 'visible' }}>
     <span style={{ ...iconBase('/folhas-sobrepostas-icon.webp'), filter: isDark? 'drop-shadow(0 1.5px 3px rgba(0,0,0,0.3))' : 'drop-shadow(0 1px 1px rgba(124,58,237,0.15))' }} />
@@ -74,35 +217,26 @@ const ScannerLGPDPremiumIcon = ({ size = 36 }) => (
 )
 
 const TOOLS = [
-  { id: 'merge', name: 'Juntar PDF', desc: 'Junte vários PDFs em um só', icon: null, customIcon: 'juntarV1' },
-  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', icon: null, customIcon: 'dividirRoxo' },
-  { id: 'compress', name: 'Comprimir PDF', desc: 'Reduza o tamanho', icon: null, customIcon: 'comprimirRoxo' },
-  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', icon: null, customIcon: 'monalisaRoxo' },
-  { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', icon: null, customIcon: 'paletteRoxo' },
-  { id: 'rotate', name: 'Girar PDF', desc: 'Gire as páginas', icon: null, customIcon: 'girarRoxo' },
-  { id: 'extract', name: 'Extrair Páginas', desc: 'Extraia só algumas', icon: null, customIcon: 'extrairRoxo' },
-  { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', icon: null, customIcon: 'protegerRoxo' },
-  { id: 'unlock', name: 'Desbloquear PDF', desc: 'Remova a senha', icon: null, customIcon: 'desbloquearRoxo' },
-  { id: 'lgpd', name: 'Scanner LGPD', desc: 'Ache CPF/RG/CNPJ', icon: null, customIcon: 'lgpdRoxo', premium: true, locked: true },
+  { id: 'merge', name: 'Juntar PDF', desc: 'Junte vários PDFs em um só', customIcon: 'juntarV1' },
+  { id: 'split', name: 'Dividir PDF', desc: 'Separe um PDF em vários', customIcon: 'dividirRoxo' },
+  { id: 'compress', name: 'Comprimir PDF', desc: 'Reduza o tamanho', customIcon: 'comprimirRoxo' },
+  { id: 'jpg2pdf', name: 'JPG para PDF', desc: 'Imagens em PDF', customIcon: 'monalisaRoxo' },
+  { id: 'pdf2jpg', name: 'PDF para JPG', desc: 'Extraia imagens', customIcon: 'paletteRoxo' },
+  { id: 'rotate', name: 'Girar PDF', desc: 'Gire as páginas', customIcon: 'girarRoxo' },
+  { id: 'extract', name: 'Extrair Páginas', desc: 'Extraia só algumas', customIcon: 'extrairRoxo' },
+  { id: 'protect', name: 'Proteger PDF', desc: 'Coloque senha', customIcon: 'protegerRoxo' },
+  { id: 'unlock', name: 'Desbloquear PDF', desc: 'Remova a senha', customIcon: 'desbloquearRoxo' },
+  { id: 'lgpd', name: 'Scanner LGPD', desc: 'Ache CPF/RG/CNPJ', customIcon: 'lgpdRoxo', premium: true, locked: true },
 ]
 
 function Dashboard() {
   const [activeTool, setActiveTool] = useState('merge')
-  const [lgpdUnlocked, setLgpdUnlocked] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem('youconverter_theme')
-    if (saved) return saved === 'dark'
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-  })
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('youconverter_theme') === 'dark')
   const navigate = useNavigate()
+  const { user, isPremium, logout } = useAuth()
 
-  useEffect(() => {
-    localStorage.setItem('youconverter_theme', isDark? 'dark' : 'light')
-    const savedLgpd = localStorage.getItem('lgpd_unlocked')
-    if (savedLgpd === 'true') setLgpdUnlocked(true)
-  }, [isDark])
-
+  useEffect(() => { localStorage.setItem('youconverter_theme', isDark? 'dark' : 'light') }, [isDark])
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
     check()
@@ -112,19 +246,9 @@ function Dashboard() {
 
   const handleToolClick = (t) => {
     if (t.id === 'lgpd') {
-      if (!lgpdUnlocked) {
-        const pwd = prompt('🔒 Ferramenta bloqueada\nDigite a senha para liberar o Scanner LGPD:')
-        if (pwd === 'Andreoni') {
-          setLgpdUnlocked(true)
-          localStorage.setItem('lgpd_unlocked', 'true')
-          navigate('/scanner-lgpd')
-        } else if (pwd!== null) {
-          alert('Senha incorreta')
-        }
-        return
-      }
-      navigate('/scanner-lgpd')
-      return
+      if (!user) { navigate('/login'); return }
+      if (!isPremium) { navigate('/pricing'); return }
+      navigate('/scanner-lgpd'); return
     }
     setActiveTool(t.id)
     window.scrollTo({top:0, behavior:'smooth'})
@@ -142,61 +266,70 @@ function Dashboard() {
       case 'extract': return <ExtractTool isDark={isDark} />
       case 'unlock': return <UnlockTool isDark={isDark} />
       case 'lgpd':
-        if (!lgpdUnlocked) {
+        if (!isPremium) {
           return (
             <div style={{textAlign:'center', padding:'40px 20px'}}>
-              <div style={{display:'flex', justifyContent:'center', marginBottom:16}}><ScannerLGPDPremiumIcon size={72} isDark={isDark} /></div>
-              <h2 style={{fontWeight:900, marginTop:12}}>Scanner LGPD Bloqueado</h2>
-              <p style={{opacity:0.6, fontSize:13, marginTop:8}}>Esta ferramenta está em testes internos.<br/>Clique no card e digite a senha: <b>Andreoni</b></p>
-              <button onClick={() => {
-                const pwd = prompt('Digite a senha:')
-                if (pwd === 'Andreoni') {
-                  setLgpdUnlocked(true)
-                  localStorage.setItem('lgpd_unlocked', 'true')
-                  navigate('/scanner-lgpd')
-                } else if (pwd!== null) alert('Senha incorreta')
-              }} style={{marginTop:16, background:'#5B21B6', color:'white', padding:'10px 20px', borderRadius:10, border:'none', fontWeight:800}}>🔓 Desbloquear e ir pra página dedicada</button>
+              <h2 style={{fontWeight:900}}>Scanner LGPD é Premium</h2>
+              <p style={{opacity:0.6, fontSize:13, marginTop:8}}>Login com Google + plano Premium via Supabase</p>
+              <button onClick={() => navigate('/pricing')} style={{marginTop:16, background:'#5B21B6', color:'white', padding:'10px 20px', borderRadius:10, border:'none', fontWeight:800}}>💳 Ver planos</button>
             </div>
           )
         }
-        navigate('/scanner-lgpd')
-        return null
+        navigate('/scanner-lgpd'); return null
       default: return null
     }
   }
 
   const PURPLE = '#5B21B6'
-  const isLgpdWorkspace = activeTool === 'lgpd' && lgpdUnlocked
   const ICON_SIZE = isMobile? 28 : 36
 
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return (
+      <div style={{ minHeight: '100vh', padding: 40, fontFamily: 'Inter, sans-serif', maxWidth: 700, margin: '0 auto' }}>
+        <h1 style={{ fontWeight: 900, fontSize: 24 }}>⚠️ Configure o .env - sem isso fica branco</h1>
+        <div style={{ background: '#fef2f2', border: '1.5px solid #fecaca', padding: 20, borderRadius: 12, marginTop: 16, fontSize: 13, lineHeight: 1.6 }}>
+          Seu <b>frontend/.env</b> não está sendo lido. Crie/edite com:<br/><br/>
+          <code style={{ background: 'white', padding: '12px 14px', borderRadius: 8, display: 'block', fontSize: 12 }}>
+            VITE_SUPABASE_URL=https://xxxx.supabase.co<br/>
+            VITE_SUPABASE_ANON_KEY=sb_publishable_ou_eyJ...<br/>
+            VITE_SITE_URL=http://localhost:7132
+          </code>
+          <br/>Depois:<br/>
+          1. Salve o arquivo<br/>
+          2. <b>taskkill /F /IM node.exe</b><br/>
+          3. <b>npm run dev -- --port 7132 --host</b><br/><br/>
+          URL atual: {String(supabaseUrl)}<br/>Key: {supabaseAnonKey ? 'presente ('+supabaseAnonKey.slice(0,15)+'...)' : 'FALTANDO'}
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', fontFamily:'Inter, system-ui, sans-serif', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column', transition:'background.2s, color.2s', overflowX:'hidden', maxWidth:'100vw'}}>
-      <header style={{borderBottom: isDark? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', position:'sticky', top:0, zIndex:20, width:'100%', maxWidth:'100vw', boxSizing:'border-box', overflow:'hidden'}}>
-        <div style={{maxWidth:'1400px', margin:'0 auto', padding: isMobile? '10px 12px' : '12px 32px', display:'flex', justifyContent:'space-between', alignItems:'center', width:'100%', boxSizing:'border-box', gap: isMobile? '8px' : '16px'}}>
-          <div style={{flexShrink:1, minWidth:0, overflow:'hidden'}}>
-            <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
+    <div style={{minHeight:'100vh', background: isDark? '#0f0f0f' : '#ffffff', color: isDark? '#f3f4f6' : '#111827', display:'flex', flexDirection:'column'}}>
+      <header style={{borderBottom: isDark? '1px solid #27272a' : '1px solid #f3f4f6', background: isDark? 'rgba(26,26,26,0.9)' : 'rgba(255,255,255,0.9)', backdropFilter:'blur(12px)', position:'sticky', top:0, zIndex:20}}>
+        <div style={{maxWidth:'1400px', margin:'0 auto', padding: '12px 32px', display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+          <Logo isDark={isDark} onToggle={() => setIsDark(!isDark)} />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {user ? (
+              <>
+                <span style={{ fontSize: 12, fontWeight: 800 }}>{user.email}</span>
+                {isPremium && <span style={{ background: '#10b981', color: 'white', fontSize: 9, fontWeight: 900, padding: '2px 6px', borderRadius: 99 }}>PRO</span>}
+                <button onClick={logout} style={{ fontSize: 11, border: '1px solid #e5e7eb', borderRadius: 8, padding: '6px 10px', cursor: 'pointer' }}>Sair</button>
+              </>
+            ) : (
+              <Link to="/login" style={{ background: '#111', color: 'white', padding: '9px 18px', borderRadius: 10, fontWeight: 800, fontSize: 12, textDecoration: 'none' }}>Entrar com Google (Supabase)</Link>
+            )}
           </div>
         </div>
       </header>
-
-      <div style={{flex:1, display:'flex', flexDirection:'column', maxWidth:'1400px', margin:'0 auto', width:'100%', padding: isMobile? '0 12px' : '0 32px', boxSizing:'border-box', overflowX:'hidden'}}>
-        {!isLgpdWorkspace? (
-          <div style={{textAlign:'center', paddingTop: isMobile? '20px' : '32px', paddingBottom:'16px', transition:'all.3s ease'}}>
-            <h1 style={{fontSize:'clamp(28px, 4vw, 46px)', fontWeight:'900', letterSpacing:'-1.4px', lineHeight:'1.05', maxWidth:'680px', margin:'0 auto'}}>Todas as ferramentas de PDF que você precisa.</h1>
-            <p style={{color: isDark? '#a1a1aa' : '#6b7280', fontSize: isMobile? '15px' : '17px', marginTop:'12px', maxWidth:'650px', margin:'12px auto 0', padding: isMobile? '0 8px' : '0'}}>Junte, divida, comprima e converta em segundos. Agora com página dedicada /scanner-lgpd.</p>
-          </div>
-        ) : (
-          <div style={{display:'flex', alignItems:'center', gap:12, paddingTop: isMobile? '14px' : '18px', paddingBottom:'12px'}}>
-            <button onClick={()=>setActiveTool('merge')} style={{background:'white', border:'1px solid #e5e7eb', borderRadius:10, padding:'6px 12px', fontSize:12, fontWeight:700, cursor:'pointer'}}>← Todas as ferramentas</button>
-            <span style={{fontSize:12, opacity:0.5}}>/</span>
-            <span style={{fontSize:13, fontWeight:900, display:'flex', alignItems:'center', gap:6}}><ScannerLGPDPremiumIcon size={24} isDark={isDark} /> Scanner LGPD</span>
-          </div>
-        )}
-
-        <div style={{display:'grid', gridTemplateColumns: isMobile? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(210px, 1fr))', gap: isMobile? '10px' : '18px', marginTop: isLgpdWorkspace? '8px' : '24px', transition:'all.3s ease'}}>
+      <div style={{flex:1, maxWidth:'1400px', margin:'0 auto', width:'100%', padding: '0 32px'}}>
+        <div style={{textAlign:'center', paddingTop: '32px', paddingBottom:'16px'}}>
+          <h1 style={{fontSize:'clamp(28px, 4vw, 46px)', fontWeight:'900'}}>Todas as ferramentas de PDF que você precisa.</h1>
+          <p style={{opacity:0.6, marginTop:12}}>{isPremium ? '✅ Premium liberado via Supabase' : 'Login com Google via Supabase • Scanner LGPD é Premium'}</p>
+        </div>
+        <div style={{display:'grid', gridTemplateColumns: isMobile? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(210px, 1fr))', gap: '18px', marginTop: '24px'}}>
           {TOOLS.map(t => {
-            const isLocked = t.locked && !lgpdUnlocked
-            const isActive = activeTool===t.id
+            const isLocked = t.locked && !isPremium
             const getIcon = () => {
               if (t.customIcon === 'juntarV1') return <JuntarPremiumV1Icon size={ICON_SIZE} isDark={isDark} />
               if (t.customIcon === 'dividirRoxo') return <DividirPremiumIcon size={ICON_SIZE} isDark={isDark} />
@@ -208,68 +341,22 @@ function Dashboard() {
               if (t.customIcon === 'protegerRoxo') return <ProtegerPremiumIcon size={ICON_SIZE} isDark={isDark} />
               if (t.customIcon === 'desbloquearRoxo') return <DesbloquearPremiumIcon size={ICON_SIZE} isDark={isDark} />
               if (t.customIcon === 'lgpdRoxo') return <ScannerLGPDPremiumIcon size={ICON_SIZE} isDark={isDark} />
-              return <span style={{fontSize: ICON_SIZE-6}}>{t.icon}</span>
+              return null
             }
             return (
-              <div key={t.id} onClick={() => handleToolClick(t)} className="tool-card"
-                style={{
-                  border: isActive? `2px solid ${PURPLE}` : (isDark? '1px solid #27272a' : '1px solid #e5e7eb'),
-                  background: isActive? (isDark? '#2a1f3d' : '#f9f7ff') : (isDark? '#1f1f1f' : 'white'),
-                  borderRadius:'16px', padding: isMobile? '14px 12px' : '16px 14px', cursor: 'pointer', transition:'all.18s ease',
-                  textAlign:'left', color: isDark? 'white' : '#111827', minHeight: isMobile? '108px' : '122px', maxHeight: isMobile? '108px' : '122px',
-                  display:'flex', flexDirection:'column', justifyContent:'flex-start', boxSizing:'border-box', position:'relative', opacity: isLocked? 0.9 : 1, overflow:'visible'
-                }}>
-                {isLocked && <div style={{position:'absolute', top:6, right:6, background:'#ef4444', color:'white', fontSize:'8px', fontWeight:900, padding:'2px 6px', borderRadius:'6px', zIndex:2}}>🔒 BLOQUEADO</div>}
-                {!isLocked && t.id==='lgpd' && <div style={{position:'absolute', top:6, right:6, background:'#10b981', color:'white', fontSize:'8px', fontWeight:900, padding:'2px 6px', borderRadius:'6px', zIndex:2}}>✅ PÁGINA DEDICADA</div>}
-                <div style={{ width: ICON_SIZE, height: ICON_SIZE, display:'flex', alignItems:'center', justifyContent:'flex-start', flexShrink: 0, overflow:'visible', position:'relative' }}>{getIcon()}</div>
-                <div style={{fontWeight:'700', marginTop:'10px', fontSize: isMobile? '13px' : '14.5px', lineHeight:'1.25'}}>{t.name}</div>
-                <div style={{fontSize:'12px', color: isDark? '#a1a1aa' : '#6b7280', marginTop:'4px', lineHeight:'1.35'}}>{t.id==='lgpd' ? 'Clique → vai pra /scanner-lgpd' : t.desc}</div>
+              <div key={t.id} onClick={() => handleToolClick(t)} style={{border: '1px solid #e5e7eb', background: 'white', borderRadius:'16px', padding:'16px 14px', cursor:'pointer', position:'relative'}}>
+                {isLocked && <div style={{position:'absolute', top:6, right:6, background:'#ef4444', color:'white', fontSize:'8px', fontWeight:900, padding:'2px 6px', borderRadius:'6px'}}>{user ? '💳 PREMIUM' : '🔒 LOGIN'}</div>}
+                <div style={{ width: ICON_SIZE, height: ICON_SIZE }}>{getIcon()}</div>
+                <div style={{fontWeight:'700', marginTop:'10px'}}>{t.name}</div>
+                <div style={{fontSize:'12px', opacity:0.6}}>{t.desc}</div>
               </div>
             )
           })}
         </div>
-
-        <div className="action-area-wrapper" style={{display:'flex', gap:'28px', marginTop:'32px', alignItems:'flex-start', width:'100%', maxWidth:'100%', boxSizing:'border-box', flexDirection: isLgpdWorkspace? 'column' : undefined}}>
-          {!isLgpdWorkspace && (
-            <div style={{width:'300px', minWidth:'300px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
-              <div style={{ background: isDark? 'linear-gradient(135deg, #1e1e1e 0%, #162030 100%)' : 'linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)', border: isDark? '1px solid #3f3f46' : '1px solid #bfdbfe', borderLeft: '4px solid #3b82f6', borderRadius:'16px', padding:'24px 20px', width:'100%', height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', boxSizing:'border-box' }}>
-                <div style={{width:'48px', height:'48px', borderRadius:'12px', background:'#3b82f6', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'24px', marginBottom:'14px', boxShadow:'0 4px 12px rgba(59,130,246,0.25)'}}>🔒</div>
-                <div style={{fontSize:'16px', fontWeight:'900', marginBottom:'12px', lineHeight:'1.2', color: isDark? 'white' : '#111827'}}>🇧🇷 Feito no Brasil</div>
-                <div style={{fontSize:'14.5px', color: isDark? '#d4d4d8' : '#4b5563', lineHeight:'1.6'}}>Criado aqui, com <b style={{color: isDark? 'white' : '#111827'}}>privacidade em primeiro lugar</b>. Seus arquivos são apagados automaticamente após o uso. Agora com página dedicada <Link to="/scanner-lgpd" style={{color: '#5B21B6', fontWeight:800}}>/scanner-lgpd</Link></div>
-              </div>
-            </div>
-          )}
-
-          <div style={{flex:1, minWidth:'0', width:'100%'}}>
-            <div style={{background: isDark? '#1f1f1f' : 'white', border: isDark? '1px solid #27272a' : '1px solid #e5e7eb', borderRadius:'16px', padding: isMobile? '16px' : '22px', boxShadow: isDark? '0 8px 24px rgba(0,0,0,0.3)' : '0 8px 24px rgba(0,0,0,0.06)', minHeight:'380px', display:'flex', flexDirection:'column', boxSizing:'border-box', maxWidth:'100%', overflow:'hidden'}}>
-              <div style={{flex:1, minWidth:0}}>
-                <Suspense fallback={<div style={{padding:'60px', textAlign:'center'}}><div className="animate-pulse">🔒 Carregando ferramenta segura...</div></div>}>
-                  {renderTool()}
-                </Suspense>
-              </div>
-            </div>
-          </div>
-
-          {!isLgpdWorkspace && (
-            <div style={{width:'320px', minWidth:'320px', height:'380px', flexShrink:0, position:'sticky', top:'90px'}}>
-              <div style={{ background: isDark? '#1e1e1e' : 'white', border: isDark? '1px solid #3f3f46' : '1px solid #e5e7eb', borderLeft: '4px solid #f59e0b', borderRadius:'16px', padding:'22px 20px', width:'100%', height:'100%', display:'flex', flexDirection:'column', justifyContent:'center', boxSizing:'border-box' }}>
-                <div style={{display:'flex', alignItems:'center', gap:'8px', marginBottom:'16px'}}>
-                  <div style={{width:'28px', height:'28px', borderRadius:'8px', background: isDark? '#78350f' : '#fef3c7', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'14px'}}>⚡</div>
-                  <div style={{fontWeight:'800', fontSize:'15px', color: isDark? 'white' : '#111827'}}>Como funciona?</div>
-                </div>
-                <div style={{display:'flex', flexDirection:'column', gap:'16px'}}>
-                  <div style={{display:'flex', gap:'12px'}}><div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:PURPLE, color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>1</div><div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Escolha</b> o que quer fazer ali em cima</div></div>
-                  <div style={{display:'flex', gap:'12px'}}><div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:PURPLE, color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>2</div><div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Arraste</b> seu PDF pra cá ou clique em <b>Escolher Arquivo</b></div></div>
-                  <div style={{display:'flex', gap:'12px'}}><div style={{minWidth:'32px', height:'32px', borderRadius:'10px', background:'#10b981', color:'white', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:'900', fontSize:'13px'}}>3</div><div style={{fontSize:'13.5px', lineHeight:'1.4', color: isDark? '#d4d4d8' : '#374151'}}><b style={{color: isDark? 'white' : '#111827'}}>Clique</b> no botão roxo e seu arquivo novo <b style={{color:'#10b981'}}>já baixa sozinho</b></div></div>
-                </div>
-              </div>
-            </div>
-          )}
+        <div style={{marginTop:32, background:'white', border:'1px solid #e5e7eb', borderRadius:16, padding:22}}>
+          <Suspense fallback={<div>Carregando...</div>}>{renderTool()}</Suspense>
         </div>
       </div>
-
-      <footer style={{borderTop: isDark? '1px solid #27272a' : '1px solid #f3f4f6', padding:'16px 24px', textAlign:'center', fontSize:'12px', color: isDark? '#52525b' : '#9ca3af', marginTop:'48px'}}>© 2026 YouConverter • Feito no Brasil 🇧🇷 • Privado e seguro</footer>
-      <style>{`html, body { overflow-x: hidden!important; max-width: 100vw!important; } * { box-sizing: border-box; } .tool-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(91,33,182,0.12); } @media (max-width: 1200px) { .action-area-wrapper { flex-direction: column!important; } .action-area-wrapper > div { width: 100%!important; min-width: 100%!important; height: auto!important; position: static!important; } } @media (max-width: 768px) { .hide-mobile { display: none!important; } }`}</style>
     </div>
   )
 }
@@ -277,14 +364,20 @@ function Dashboard() {
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/scanner-lgpd" element={
-          <Suspense fallback={<div style={{padding:60, textAlign:'center'}}>🔒 Carregando Scanner LGPD...</div>}>
-            <ScannerLgpdDedicatedPage />
-          </Suspense>
-        } />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/scanner-lgpd" element={
+            <ProtectedRoute needPremium={true}>
+              <Suspense fallback={<div style={{padding:60, textAlign:'center'}}>🔒 Carregando Scanner LGPD...</div>}>
+                <ScannerLgpdDedicatedPage />
+              </Suspense>
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
